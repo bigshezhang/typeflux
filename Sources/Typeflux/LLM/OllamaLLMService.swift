@@ -214,6 +214,7 @@ final class OllamaLLMService: LLMService {
             "model": model,
             "stream": stream,
             "keep_alive": localModelKeepAlive,
+            "think": thinkingControl(for: model),
             "messages": [
                 ["role": "system", "content": systemPrompt],
                 ["role": "user", "content": userPrompt],
@@ -222,6 +223,15 @@ final class OllamaLLMService: LLMService {
                 "temperature": temperature,
             ],
         ]
+    }
+
+    private static func thinkingControl(for model: String) -> Any {
+        let normalizedModel = model.lowercased()
+        if normalizedModel.contains("gpt-oss") {
+            return "low"
+        }
+
+        return false
     }
 }
 

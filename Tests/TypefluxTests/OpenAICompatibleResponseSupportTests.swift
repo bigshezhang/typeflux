@@ -87,6 +87,37 @@ final class OpenAICompatibleResponseSupportTests: XCTestCase {
         XCTAssertEqual(body["include_reasoning"] as? Bool, false)
     }
 
+    func testProviderTuningDisablesReasoningForLocalOpenAICompatibleEndpoint() throws {
+        var body: [String: Any] = ["model": "qwen3:8b"]
+        try OpenAICompatibleResponseSupport.applyProviderTuning(
+            body: &body,
+            baseURL: XCTUnwrap(URL(string: "http://127.0.0.1:11434/v1")),
+            model: "qwen3:8b",
+        )
+
+        XCTAssertEqual(body["enable_thinking"] as? Bool, false)
+        XCTAssertEqual(body["reasoning_effort"] as? String, "none")
+        XCTAssertEqual(
+            (body["reasoning"] as? [String: String])?["effort"],
+            "none",
+        )
+    }
+
+    func testProviderTuningDisablesReasoningForPrivateNetworkOpenAICompatibleEndpoint() throws {
+        var body: [String: Any] = ["model": "local-reasoning-model"]
+        try OpenAICompatibleResponseSupport.applyProviderTuning(
+            body: &body,
+            baseURL: XCTUnwrap(URL(string: "http://192.168.1.10:8000/v1")),
+            model: "local-reasoning-model",
+        )
+
+        XCTAssertEqual(body["reasoning_effort"] as? String, "none")
+        XCTAssertEqual(
+            (body["reasoning"] as? [String: String])?["effort"],
+            "none",
+        )
+    }
+
     func testProviderTuningUsesLowestOpenAIReasoningEffort() throws {
         var modernBody: [String: Any] = ["model": "gpt-5.4"]
         try OpenAICompatibleResponseSupport.applyProviderTuning(

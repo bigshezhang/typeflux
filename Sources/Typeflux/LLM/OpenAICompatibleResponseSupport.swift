@@ -104,6 +104,9 @@ enum OpenAICompatibleResponseSupport {
             body["include_reasoning"] = false
         } else if let effort = reasoningEffort(baseURL: baseURL, model: model) {
             body["reasoning"] = ["effort": effort]
+            if isLocalEndpoint(baseURL) {
+                body["reasoning_effort"] = effort
+            }
         }
     }
 
@@ -204,6 +207,7 @@ enum OpenAICompatibleResponseSupport {
             "mimo",
         ]
         return disabledHosts.contains(where: { host.contains($0) })
+            || isLocalEndpoint(baseURL)
             || disabledModelKeywords.contains(where: { normalizedModel.contains($0) })
     }
 
@@ -245,6 +249,10 @@ enum OpenAICompatibleResponseSupport {
             return "none"
         }
 
+        if isLocalEndpoint(baseURL) {
+            return "none"
+        }
+
         if host == "api.openai.com" || host.hasSuffix(".openai.com"),
            normalizedModel.hasPrefix("gpt-5"),
            !normalizedModel.contains("pro")
@@ -261,6 +269,29 @@ enum OpenAICompatibleResponseSupport {
         }
 
         return nil
+    }
+
+    private static func isLocalEndpoint(_ baseURL: URL) -> Bool {
+        guard let host = baseURL.host?.lowercased() else { return false }
+
+        if host == "localhost" || host == "127.0.0.1" || host == "::1" {
+            return true
+        }
+
+        if host.hasPrefix("10.") || host.hasPrefix("192.168.") {
+            return true
+        }
+
+        let parts = host.split(separator: ".")
+        if parts.count == 4,
+           parts[0] == "172",
+           let second = Int(parts[1]),
+           (16 ... 31).contains(second)
+        {
+            return true
+        }
+
+        return false
     }
 
     private static func extractText(from value: Any?) -> String? {

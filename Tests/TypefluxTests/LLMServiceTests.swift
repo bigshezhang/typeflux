@@ -126,9 +126,22 @@ final class LLMServiceTests: XCTestCase {
         )
 
         XCTAssertEqual(body["keep_alive"] as? String, "30m")
+        XCTAssertEqual(body["think"] as? Bool, false)
         XCTAssertEqual(body["model"] as? String, "llama3")
         XCTAssertEqual(body["stream"] as? Bool, true)
         let options = try XCTUnwrap(body["options"] as? [String: Any])
         XCTAssertEqual(options["temperature"] as? Double, 0.4)
+    }
+
+    func testOllamaChatRequestUsesLowThinkingForGPTOSSModels() {
+        let body = OllamaLLMService.makeChatRequestBody(
+            model: "gpt-oss:20b",
+            systemPrompt: "system",
+            userPrompt: "user",
+            stream: true,
+            temperature: 0.4,
+        )
+
+        XCTAssertEqual(body["think"] as? String, "low")
     }
 }
