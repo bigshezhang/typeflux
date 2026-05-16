@@ -24,6 +24,18 @@ final class StudioThemeTests: XCTestCase {
         XCTAssertEqual(StudioTheme.Layout.settingsWindowWidth, 1100)
     }
 
+    func testSettingsWindowMinimumWidthKeepsOverviewOutOfCompactLayout() {
+        let minimumContentWidth = StudioTheme.Layout.settingsWindowMinWidth
+            - StudioTheme.Layout.sidebarWidth
+            - StudioTheme.Layout.contentInset * 2
+
+        XCTAssertEqual(StudioTheme.Layout.settingsWindowMinWidth, StudioTheme.Layout.settingsWindowWidth)
+        XCTAssertGreaterThanOrEqual(
+            minimumContentWidth,
+            StudioOverviewPanelLayoutCalculator.compactBreakpoint
+        )
+    }
+
     func testOverlayWidth() {
         XCTAssertEqual(StudioTheme.Layout.overlayWidth, 320)
     }

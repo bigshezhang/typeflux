@@ -94,10 +94,12 @@ final class SettingsWindowController: NSObject {
         window.contentView = hosting
         window.isReleasedWhenClosed = false
         window.delegate = self
-        window.minSize = NSSize(
+        let minimumWindowSize = NSSize(
             width: StudioTheme.Layout.settingsWindowMinWidth,
             height: StudioTheme.Layout.settingsWindowMinHeight
         )
+        window.minSize = minimumWindowSize
+        window.contentMinSize = minimumWindowSize
         window.appearance = AppAppearance.nsAppearance(for: settingsStore.appearanceMode)
 
         self.viewModel = viewModel
