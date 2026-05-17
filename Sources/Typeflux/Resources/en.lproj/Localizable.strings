@@ -542,6 +542,8 @@
 "settings.shortcuts.activation.title" = "Voice Input";
 "settings.shortcuts.activation.subtitle" = "Use one shortcut to start voice input. Hold to talk, or tap quickly to lock the recording session. If text is selected, the transcript replaces that selection directly.";
 "settings.shortcuts.activation.footnote" = "";
+"settings.shortcuts.quickInput.title" = "Quick Input";
+"settings.shortcuts.quickInput.subtitle" = "When enabled, hold-to-talk inserts the speech-to-text transcript directly without applying a persona. Quick taps still lock recording and use the current persona workflow.";
 "settings.shortcuts.ask.title" = "Ask Anything";
 "settings.shortcuts.ask.subtitle" = "Double-tap Fn to start recording and ask anything. Answers appear in a popup. If text is selected, explicit edit requests can also rewrite it directly.";
 "settings.shortcuts.ask.footnote" = "";

@@ -50,12 +50,6 @@ extension STTRouter {
         onLLMStart: @escaping @Sendable () async -> Void,
         onLLMChunk: @escaping @Sendable (String) async -> Void
     ) async throws -> (transcript: String, rewritten: String?) {
-        if settingsStore.sttProvider == .typefluxOfficial,
-           let localTranscript = await transcribeWithAutoModelIfReady(audioFile: audioFile, onUpdate: onASRUpdate) {
-            NetworkDebugLogger.logMessage("Auto local model used for Typeflux Official LLM-integrated request")
-            return (transcript: localTranscript, rewritten: nil)
-        }
-
         guard let integrated = typefluxOfficial as? TypefluxCloudLLMIntegratedTranscriber else {
             let transcript = try await transcribeStream(audioFile: audioFile, scenario: scenario, onUpdate: onASRUpdate)
             return (transcript: transcript, rewritten: nil)

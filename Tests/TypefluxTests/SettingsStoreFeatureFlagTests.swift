@@ -53,6 +53,18 @@ final class SettingsStoreFeatureFlagTests: XCTestCase {
         XCTAssertFalse(reloaded.stubbornPasteFallbackEnabled)
     }
 
+    func testLocalOptimizationEnabledDefaultsToFalse() {
+        XCTAssertFalse(store.localOptimizationEnabled)
+    }
+
+    func testLocalOptimizationEnabledCanBeEnabledAndDisabled() {
+        store.localOptimizationEnabled = true
+        XCTAssertTrue(store.localOptimizationEnabled)
+
+        store.localOptimizationEnabled = false
+        XCTAssertFalse(store.localOptimizationEnabled)
+    }
+
     func testInputContextOptimizationEnabledDefaultsToTrue() {
         XCTAssertTrue(store.inputContextOptimizationEnabled)
     }

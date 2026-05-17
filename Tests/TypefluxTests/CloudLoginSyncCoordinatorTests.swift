@@ -6,6 +6,7 @@ final class CloudLoginSyncCoordinatorTests: XCTestCase {
     func testPromptsAndAppliesCloudDefaultsAfterLoginWithExistingEntitlement() async throws {
         let settingsStore = makeSettingsStore()
         settingsStore.sttProvider = .whisperAPI
+        settingsStore.localOptimizationEnabled = true
         settingsStore.llmProvider = .openAICompatible
         settingsStore.llmRemoteProvider = .openAI
 
@@ -21,6 +22,7 @@ final class CloudLoginSyncCoordinatorTests: XCTestCase {
         try await waitForPromptCount(1, in: prompt)
 
         XCTAssertEqual(settingsStore.sttProvider, .typefluxOfficial)
+        XCTAssertFalse(settingsStore.localOptimizationEnabled)
         XCTAssertEqual(settingsStore.llmProvider, .openAICompatible)
         XCTAssertEqual(settingsStore.llmRemoteProvider, .typefluxCloud)
         XCTAssertEqual(prompt.confirmCallCount, 1)

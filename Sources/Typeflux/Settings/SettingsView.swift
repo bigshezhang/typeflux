@@ -2256,7 +2256,8 @@ struct StudioView: View {
                         },
                         onUnset: {
                             viewModel.unsetActivationHotkey()
-                        }
+                        },
+                        showsQuickInputSetting: true
                     )
 
                     shortcutConfigurationRow(
@@ -3043,47 +3044,70 @@ struct StudioView: View {
         configuration: ShortcutConfiguration,
         onStartRecording: @escaping () -> Void,
         onReset: @escaping () -> Void,
-        onUnset: @escaping () -> Void
+        onUnset: @escaping () -> Void,
+        showsQuickInputSetting: Bool = false
     ) -> some View {
         StudioCard(padding: StudioTheme.Insets.cardDense) {
-            HStack(alignment: .center, spacing: StudioTheme.Spacing.large) {
-                RoundedRectangle(cornerRadius: StudioTheme.CornerRadius.large, style: .continuous)
-                    .fill(StudioTheme.iconTileSurface)
-                    .frame(width: 54, height: 54)
-                    .overlay(
-                        Image(systemName: configuration.icon)
-                            .font(.system(size: 21, weight: .semibold))
-                            .foregroundStyle(StudioTheme.accent)
+            VStack(alignment: .leading, spacing: StudioTheme.Spacing.medium) {
+                HStack(alignment: .center, spacing: StudioTheme.Spacing.large) {
+                    RoundedRectangle(cornerRadius: StudioTheme.CornerRadius.large, style: .continuous)
+                        .fill(StudioTheme.iconTileSurface)
+                        .frame(width: 54, height: 54)
+                        .overlay(
+                            Image(systemName: configuration.icon)
+                                .font(.system(size: 21, weight: .semibold))
+                                .foregroundStyle(StudioTheme.accent)
+                        )
+
+                    VStack(alignment: .leading, spacing: StudioTheme.Spacing.xxSmall) {
+                        Text(configuration.title)
+                            .font(.studioDisplay(StudioTheme.Typography.cardTitle, weight: .semibold))
+                            .foregroundStyle(StudioTheme.textPrimary)
+                        Text(configuration.subtitle)
+                            .font(.studioBody(StudioTheme.Typography.bodySmall))
+                            .foregroundStyle(StudioTheme.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(configuration.footnote)
+                            .font(.studioBody(StudioTheme.Typography.caption))
+                            .foregroundStyle(StudioTheme.textTertiary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: 340, alignment: .leading)
+
+                    Spacer(minLength: StudioTheme.Spacing.large)
+
+                    shortcutPill(configuration.binding, accentSymbol: configuration.badgeSymbol)
+                        .frame(minWidth: 170, alignment: .leading)
+
+                    shortcutActionButtons(
+                        isDefault: configuration.isDefault,
+                        isUnset: configuration.binding == nil,
+                        isThisRecording: configuration.isThisRecording,
+                        onStart: onStartRecording,
+                        onReset: onReset,
+                        onUnset: onUnset
                     )
-
-                VStack(alignment: .leading, spacing: StudioTheme.Spacing.xxSmall) {
-                    Text(configuration.title)
-                        .font(.studioDisplay(StudioTheme.Typography.cardTitle, weight: .semibold))
-                        .foregroundStyle(StudioTheme.textPrimary)
-                    Text(configuration.subtitle)
-                        .font(.studioBody(StudioTheme.Typography.bodySmall))
-                        .foregroundStyle(StudioTheme.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text(configuration.footnote)
-                        .font(.studioBody(StudioTheme.Typography.caption))
-                        .foregroundStyle(StudioTheme.textTertiary)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .frame(maxWidth: 340, alignment: .leading)
 
-                Spacer(minLength: StudioTheme.Spacing.large)
+                if showsQuickInputSetting {
+                    Divider().overlay(StudioTheme.border.opacity(StudioTheme.Opacity.divider))
 
-                shortcutPill(configuration.binding, accentSymbol: configuration.badgeSymbol)
-                    .frame(minWidth: 170, alignment: .leading)
-
-                shortcutActionButtons(
-                    isDefault: configuration.isDefault,
-                    isUnset: configuration.binding == nil,
-                    isThisRecording: configuration.isThisRecording,
-                    onStart: onStartRecording,
-                    onReset: onReset,
-                    onUnset: onUnset
-                )
+                    StudioSettingRow(
+                        title: L("settings.shortcuts.quickInput.title"),
+                        subtitle: L("settings.shortcuts.quickInput.subtitle"),
+                        badge: "Beta"
+                    ) {
+                        Toggle(
+                            "",
+                            isOn: Binding(
+                                get: { viewModel.quickInputEnabled },
+                                set: viewModel.setQuickInputEnabled
+                            )
+                        )
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                    }
+                }
             }
         }
     }

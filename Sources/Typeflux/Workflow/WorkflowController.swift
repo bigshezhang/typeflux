@@ -443,11 +443,7 @@ final class WorkflowController {
 
     func shouldUseLiveTranscriptionPreview() -> Bool {
         guard liveTranscriptionPreviewer != nil else { return false }
-        if settingsStore.sttProvider == .localModel {
-            return true
-        }
-        return settingsStore.sttProvider == .typefluxOfficial
-            && settingsStore.localOptimizationEnabled
+        return settingsStore.sttProvider == .localModel
     }
 
     func startLiveTranscriptionPreviewIfNeeded(_ previewer: (any LiveTranscriptionPreviewing)?) {
@@ -1107,6 +1103,12 @@ final class WorkflowController {
         finishRecordingFromCurrentMode()
     }
 
+    func shouldUseQuickInput(recordingMode: RecordingMode, recordingIntent: RecordingIntent) -> Bool {
+        settingsStore.quickInputEnabled
+            && recordingIntent == .dictation
+            && recordingMode == .holdToTalk
+    }
+
     func finishRecordingFromCurrentMode() {
         guard isRecording else { return }
 
@@ -1120,6 +1122,10 @@ final class WorkflowController {
             return
         }
 
+        let useQuickInput = shouldUseQuickInput(
+            recordingMode: recordingMode,
+            recordingIntent: recordingIntent
+        )
         isRecording = false
         if !shouldStopAudioRecorder {
             isAudioRecorderStarted = false
@@ -1147,7 +1153,10 @@ final class WorkflowController {
 
         Task { [weak self] in
             guard let self else { return }
-            await finishRecordingAndProcess(recordingStoppedAt: recordingStoppedAt)
+            await finishRecordingAndProcess(
+                recordingStoppedAt: recordingStoppedAt,
+                bypassPersonaRewrite: useQuickInput
+            )
         }
     }
 

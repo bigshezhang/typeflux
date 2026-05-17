@@ -380,6 +380,15 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertFalse(store.personaHotkeyAppliesToSelection)
     }
 
+    func testDefaultQuickInputDisabled() {
+        XCTAssertFalse(store.quickInputEnabled)
+    }
+
+    func testSetQuickInputEnabled() {
+        store.quickInputEnabled = true
+        XCTAssertTrue(store.quickInputEnabled)
+    }
+
     func testDefaultActivePersonaID() {
         XCTAssertEqual(store.activePersonaID, "")
     }

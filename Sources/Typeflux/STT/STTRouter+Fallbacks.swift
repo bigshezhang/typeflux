@@ -34,10 +34,6 @@ extension STTRouter {
         scenario: TypefluxCloudScenario,
         onUpdate: @escaping @Sendable (TranscriptionSnapshot) async -> Void
     ) async throws -> String {
-        if let localResult = await transcribeWithAutoModelIfReady(audioFile: audioFile, onUpdate: onUpdate) {
-            NetworkDebugLogger.logMessage("Auto local model used for Typeflux Official request")
-            return localResult
-        }
         do {
             return try await transcribeWithTypefluxOfficial(
                 audioFile: audioFile,

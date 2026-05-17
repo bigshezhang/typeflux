@@ -111,6 +111,7 @@ final class CloudLoginSyncCoordinator {
 
     private func applyCloudDefaults() {
         settingsStore.sttProvider = .typefluxOfficial
+        settingsStore.localOptimizationEnabled = false
         settingsStore.llmProvider = .openAICompatible
         settingsStore.llmRemoteProvider = .typefluxCloud
         settingsStore.applyDefaultPersonaIfLLMConfigured()

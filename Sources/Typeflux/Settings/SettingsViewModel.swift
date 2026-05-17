@@ -194,6 +194,7 @@ final class StudioViewModel: ObservableObject {
 
     @Published var personaRewriteEnabled: Bool
     @Published var personaHotkeyAppliesToSelection: Bool
+    @Published var quickInputEnabled: Bool
     @Published var personas: [PersonaProfile]
     @Published var personaAppBindings: [PersonaAppBinding]
     @Published var personaAppBindingsEnabled: Bool
@@ -359,6 +360,7 @@ final class StudioViewModel: ObservableObject {
         mcpServers = settingsStore.mcpServers
         personaRewriteEnabled = settingsStore.personaRewriteEnabled
         personaHotkeyAppliesToSelection = settingsStore.personaHotkeyAppliesToSelection
+        quickInputEnabled = settingsStore.quickInputEnabled
         personas = currentPersonas
         personaAppBindings = settingsStore.personaAppBindings
         personaAppBindingsEnabled = settingsStore.personaAppBindingsEnabled
@@ -1652,6 +1654,11 @@ final class StudioViewModel: ObservableObject {
         settingsStore.personaHotkeyAppliesToSelection = value
     }
 
+    func setQuickInputEnabled(_ value: Bool) {
+        quickInputEnabled = value
+        settingsStore.quickInputEnabled = value
+    }
+
     var defaultPersonaSelectionID: UUID? {
         guard personaRewriteEnabled else { return nil }
         return UUID(uuidString: activePersonaID) ?? selectedPersonaID
@@ -1798,6 +1805,7 @@ final class StudioViewModel: ObservableObject {
         askHotkey = settingsStore.askHotkey
         personaHotkey = settingsStore.personaHotkey
         historyHotkey = settingsStore.historyHotkey
+        quickInputEnabled = settingsStore.quickInputEnabled
     }
 
     func applyPersonaSelection(_ id: UUID?) {
@@ -2013,6 +2021,7 @@ final class StudioViewModel: ObservableObject {
     private func syncPersonaSelectionFromStore() {
         personaRewriteEnabled = settingsStore.personaRewriteEnabled
         personaHotkeyAppliesToSelection = settingsStore.personaHotkeyAppliesToSelection
+        quickInputEnabled = settingsStore.quickInputEnabled
         activePersonaID = settingsStore.activePersonaID
         personaAppBindings = settingsStore.personaAppBindings
         personaAppBindingsEnabled = settingsStore.personaAppBindingsEnabled

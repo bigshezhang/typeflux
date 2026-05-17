@@ -141,6 +141,22 @@ final class WorkflowControllerProcessingTests: XCTestCase {
         XCTAssertFalse(WorkflowController.shouldRewriteTranscript(personaPrompt: nil, inputContext: nil))
     }
 
+    func testQuickInputOnlyAppliesToHoldToTalkDictation() {
+        let controller = makeWorkflowController(configureSettings: { settingsStore in
+            settingsStore.quickInputEnabled = true
+        })
+
+        XCTAssertTrue(controller.shouldUseQuickInput(recordingMode: .holdToTalk, recordingIntent: .dictation))
+        XCTAssertFalse(controller.shouldUseQuickInput(recordingMode: .locked, recordingIntent: .dictation))
+        XCTAssertFalse(controller.shouldUseQuickInput(recordingMode: .holdToTalk, recordingIntent: .askSelection))
+    }
+
+    func testQuickInputIsDisabledByDefault() {
+        let controller = makeWorkflowController()
+
+        XCTAssertFalse(controller.shouldUseQuickInput(recordingMode: .holdToTalk, recordingIntent: .dictation))
+    }
+
     func testActivePersonaPromptUsesFocusedAppBinding() {
         let customPersona = PersonaProfile(name: "Chat Reply", prompt: "Keep it warm and casual.")
         let controller = makeWorkflowController(configureSettings: { settingsStore in
@@ -881,6 +897,89 @@ final class WorkflowControllerProcessingTests: XCTestCase {
         XCTAssertTrue(controller.latestRecordingPreviewText.isEmpty)
     }
 
+    func testQuickInputHoldToTalkBypassesPersonaRewriteAfterTranscription() async throws {
+        let audioURL = try writeSilentTestAudio(duration: 1.0)
+        defer { try? FileManager.default.removeItem(at: audioURL) }
+
+        let textInjector = MockProcessingTextInjector()
+        let historyStore = MockProcessingHistoryStore()
+        let llmService = CountingProcessingLLMService(rewriteText: "persona rewrite")
+        let audioRecorder = FileReturningAudioRecorder(fileURL: audioURL)
+        let controller = makeWorkflowController(
+            textInjector: textInjector,
+            audioRecorder: audioRecorder,
+            sttTranscriber: MockProcessingTranscriber(transcript: "raw transcript"),
+            llmService: llmService,
+            historyStore: historyStore,
+            configureSettings: { settingsStore in
+                self.configureReadyLLM(settingsStore: settingsStore)
+                settingsStore.quickInputEnabled = true
+                settingsStore.applyPersonaSelection(settingsStore.personas[0].id)
+            }
+        )
+        controller.latestRecordingPreviewText = "preview transcript"
+        controller.isAudioRecorderStarted = true
+
+        await controller.finishRecordingAndProcess(
+            recordingStoppedAt: Date(),
+            bypassPersonaRewrite: true
+        )
+        await waitUntil {
+            textInjector.insertedTexts == ["raw transcript"]
+        }
+
+        XCTAssertEqual(audioRecorder.stopCallCount, 1)
+        XCTAssertEqual(textInjector.insertedTexts, ["raw transcript"])
+        XCTAssertEqual(llmService.streamRewriteCallCount, 0)
+        let savedRecord = historyStore.list().last
+        XCTAssertEqual(savedRecord?.mode, .dictation)
+        XCTAssertNil(savedRecord?.personaPrompt)
+        XCTAssertNil(savedRecord?.personaResultText)
+    }
+
+    func testQuickInputLockedRecordingStillAppliesPersonaRewrite() async throws {
+        let textInjector = MockProcessingTextInjector()
+        let historyStore = MockProcessingHistoryStore()
+        let llmService = CountingProcessingLLMService(rewriteText: "persona rewrite")
+        let controller = makeWorkflowController(
+            textInjector: textInjector,
+            sttTranscriber: MockProcessingTranscriber(transcript: "raw transcript"),
+            llmService: llmService,
+            historyStore: historyStore,
+            configureSettings: { settingsStore in
+                self.configureReadyLLM(settingsStore: settingsStore)
+                settingsStore.quickInputEnabled = true
+                settingsStore.applyPersonaSelection(settingsStore.personas[0].id)
+            }
+        )
+
+        await controller.process(
+            audioFile: AudioFile(fileURL: URL(fileURLWithPath: "/tmp/mock.wav"), duration: 1),
+            record: HistoryRecord(
+                date: Date(),
+                personaPrompt: "Use the selected persona.",
+                recordingStatus: .succeeded
+            ),
+            selectionSnapshot: TextSelectionSnapshot(),
+            selectedText: nil,
+            askContextText: nil,
+            inputContext: nil,
+            personaPrompt: "Use the selected persona.",
+            recordingIntent: .dictation,
+            sessionID: controller.processingSessionID
+        )
+        await waitUntil {
+            textInjector.insertedTexts == ["persona rewrite"]
+        }
+
+        XCTAssertEqual(textInjector.insertedTexts, ["persona rewrite"])
+        XCTAssertEqual(llmService.streamRewriteCallCount, 1)
+        let savedRecord = historyStore.list().last
+        XCTAssertEqual(savedRecord?.mode, .personaRewrite)
+        XCTAssertEqual(savedRecord?.transcriptText, "raw transcript")
+        XCTAssertEqual(savedRecord?.personaResultText, "persona rewrite")
+    }
+
     func testFinishRecordingCancelsSilentAudioWhenPreviewTextIsEmpty() async throws {
         let audioURL = try writeSilentTestAudio(duration: 1.0)
 
@@ -1285,6 +1384,41 @@ private final class SlowSelectionTextInjector: TextInjector {
 private final class MockProcessingLLMService: LLMService {
     func streamRewrite(request _: LLMRewriteRequest) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
+            continuation.finish()
+        }
+    }
+
+    func complete(systemPrompt _: String, userPrompt _: String) async throws -> String {
+        ""
+    }
+
+    func completeJSON(systemPrompt _: String, userPrompt _: String, schema _: LLMJSONSchema) async throws -> String {
+        "{}"
+    }
+}
+
+private final class CountingProcessingLLMService: LLMService {
+    private let rewriteText: String
+    private let lock = NSLock()
+    private var rewriteCalls = 0
+
+    init(rewriteText: String) {
+        self.rewriteText = rewriteText
+    }
+
+    var streamRewriteCallCount: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return rewriteCalls
+    }
+
+    func streamRewrite(request _: LLMRewriteRequest) -> AsyncThrowingStream<String, Error> {
+        lock.lock()
+        rewriteCalls += 1
+        lock.unlock()
+        let rewriteText = rewriteText
+        return AsyncThrowingStream { continuation in
+            continuation.yield(rewriteText)
             continuation.finish()
         }
     }

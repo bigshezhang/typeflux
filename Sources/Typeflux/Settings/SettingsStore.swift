@@ -338,6 +338,14 @@ final class SettingsStore {
         set { defaults.set(newValue, forKey: "persona.hotkeyAppliesToSelection") }
     }
 
+    var quickInputEnabled: Bool {
+        get { defaults.object(forKey: "voiceInput.quickInput.enabled") as? Bool ?? false }
+        set {
+            defaults.set(newValue, forKey: "voiceInput.quickInput.enabled")
+            NotificationCenter.default.post(name: .hotkeySettingsDidChange, object: self)
+        }
+    }
+
     var activePersonaID: String {
         get { defaults.string(forKey: "persona.activeID") ?? "" }
         set { defaults.set(newValue, forKey: "persona.activeID") }
@@ -657,7 +665,7 @@ final class SettingsStore {
     }
 
     var localOptimizationEnabled: Bool {
-        get { defaults.object(forKey: "stt.localOptimization.enabled") as? Bool ?? true }
+        get { defaults.object(forKey: "stt.localOptimization.enabled") as? Bool ?? false }
         set { defaults.set(newValue, forKey: "stt.localOptimization.enabled") }
     }
 

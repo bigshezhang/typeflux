@@ -48,10 +48,6 @@ extension STTRouter {
                 failureContext: "Google Cloud realtime session setup failed"
             )
         case .typefluxOfficial:
-            if settingsStore.localOptimizationEnabled,
-               autoModelDownloadService?.makeTranscriberIfReady() != nil {
-                return nil
-            }
             return await makeRealtimeTranscriptionSession(
                 provider: typefluxOfficial,
                 scenario: scenario,

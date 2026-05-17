@@ -265,7 +265,7 @@ actor AliCloudFunASRSession: PCM16RealtimeTranscriptionSession {
                 "parameters": [
                     "format": "pcm",
                     "sample_rate": 16000,
-                    "semantic_punctuation_enabled": false,
+                    "semantic_punctuation_enabled": true,
                     "max_sentence_silence": 800,
                     "heartbeat": false
                 ],

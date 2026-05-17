@@ -174,7 +174,6 @@ actor LiveTranscriptionPreviewer: LiveTranscriptionPreviewing {
 
     private var shouldUseLocalBackend: Bool {
         settingsStore.sttProvider == .localModel
-            || (settingsStore.sttProvider == .typefluxOfficial && settingsStore.localOptimizationEnabled)
     }
 }
 

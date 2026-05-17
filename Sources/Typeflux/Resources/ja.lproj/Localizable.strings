@@ -533,6 +533,8 @@
 "settings.shortcuts.activation.title" = "音声入力";
 "settings.shortcuts.activation.subtitle" = "1 つのショートカットを使用して音声入力を開始します。押し続けて話すか、すばやくタップして録音セッションをロックします。テキストが選択されている場合、トランスクリプトはその選択を直接置き換えます。";
 "settings.shortcuts.activation.footnote" = "";
+"settings.shortcuts.quickInput.title" = "クイック入力";
+"settings.shortcuts.quickInput.subtitle" = "有効にすると、押し続けて話して離した場合はペルソナを適用せず、音声テキスト変換の結果を直接挿入します。すばやくタップして録音をロックした場合は、現在のペルソナ処理をそのまま使用します。";
 "settings.shortcuts.ask.title" = "何でも聞いてください";
 "settings.shortcuts.ask.subtitle" = "Fn を 2 回押すと録音が開始され、何でも質問できます。回答はポップアップに表示されます。テキストが選択されている場合、明示的な編集リクエストによってテキストを直接書き換えることもできます。";
 "settings.shortcuts.ask.footnote" = "";

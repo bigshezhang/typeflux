@@ -540,6 +540,8 @@
 "settings.shortcuts.activation.title" = "語音輸入";
 "settings.shortcuts.activation.subtitle" = "使用一組快捷鍵開始語音輸入。可按住說話，也可快速輕觸後鎖定錄音。若目前已有選取內容，識別結果會直接覆蓋該選取範圍。";
 "settings.shortcuts.activation.footnote" = "";
+"settings.shortcuts.quickInput.title" = "快速錄入";
+"settings.shortcuts.quickInput.subtitle" = "開啟後，按住快捷鍵說話並放開時會直接插入語音轉文字結果，不套用人設。快速輕觸鎖定錄音仍會依照目前人設流程處理。";
 "settings.shortcuts.ask.title" = "隨便問";
 "settings.shortcuts.ask.subtitle" = "連按兩次 Fn 即可開始錄音提問，回答會在視窗中展示。若有選取文字，明確的編輯請求也可以直接改寫選取範圍。";
 "settings.shortcuts.ask.footnote" = "";
