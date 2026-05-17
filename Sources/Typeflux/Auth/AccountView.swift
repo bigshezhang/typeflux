@@ -115,6 +115,10 @@ struct AccountView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
+                if let credits = authState.usageCredits {
+                    AccountUsageCreditProgressView(credits: credits)
+                }
+
                 if let error = billingActionError ?? authState.subscriptionError {
                     Text(error)
                         .font(.studioBody(StudioTheme.Typography.caption))
@@ -157,10 +161,6 @@ struct AccountView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-
-                if let credits = authState.usageCredits {
-                    AccountUsageCreditProgressView(credits: credits)
-                }
 
                 HStack(alignment: .top, spacing: StudioTheme.Spacing.medium) {
                     accountSummaryItem(
