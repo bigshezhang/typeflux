@@ -326,6 +326,15 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertEqual(store.aliCloudAPIKey, "ali-key-123")
     }
 
+    func testDefaultAliCloudModelUsesParaformerRealtimeV2() {
+        XCTAssertEqual(store.aliCloudModel, "paraformer-realtime-v2")
+    }
+
+    func testAliCloudSuggestedModelsIncludeParaformerRealtimeV2() {
+        XCTAssertEqual(AliCloudASRDefaults.suggestedModels.first, "paraformer-realtime-v2")
+        XCTAssertTrue(AliCloudASRDefaults.suggestedModels.contains("fun-asr-realtime"))
+    }
+
     // MARK: - Doubao
 
     func testDefaultDoubaoAppID() {
