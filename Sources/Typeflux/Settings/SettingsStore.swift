@@ -694,6 +694,18 @@ final class SettingsStore {
 
     // MARK: - Output Post-Processing
 
+    var isTextTransformationAvailable: Bool {
+        appLanguage == .traditionalChinese
+    }
+
+    var isOutputOpenCCEffectiveEnabled: Bool {
+        isTextTransformationAvailable && outputOpenCCEnabled
+    }
+
+    var effectiveOutputOpenCCConfig: String? {
+        isOutputOpenCCEffectiveEnabled ? outputOpenCCConfig : nil
+    }
+
     var outputOpenCCEnabled: Bool {
         get {
             if defaults.object(forKey: "output.opencc.enabled") == nil {

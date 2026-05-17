@@ -2188,39 +2188,41 @@ struct StudioView: View {
                 }
             }
 
-            StudioSectionTitle(title: L("settings.output.title"))
+            if viewModel.isTextTransformationAvailable {
+                StudioSectionTitle(title: L("settings.output.title"))
 
-            StudioCard {
-                VStack(alignment: .leading, spacing: StudioTheme.Spacing.cardGroup) {
-                    StudioSettingRow(
-                        title: L("settings.output.opencc.title"),
-                        subtitle: L("settings.output.opencc.subtitle")
-                    ) {
-                        Toggle(
-                            "",
-                            isOn: Binding(get: { viewModel.textTransformationEnabled }, set: { viewModel.setTextTransformationEnabled($0) })
-                        )
-                        .labelsHidden()
-                        .toggleStyle(.switch)
-                    }
-
-                    if viewModel.textTransformationEnabled {
-                        Divider().overlay(StudioTheme.border.opacity(StudioTheme.Opacity.divider))
-
+                StudioCard {
+                    VStack(alignment: .leading, spacing: StudioTheme.Spacing.cardGroup) {
                         StudioSettingRow(
-                            title: L("settings.output.opencc.config.title"),
-                            subtitle: ""
+                            title: L("settings.output.opencc.title"),
+                            subtitle: L("settings.output.opencc.subtitle")
                         ) {
-                            StudioMenuPicker(
-                                options: [
-                                    (label: L("settings.output.opencc.config.s2twp"), value: "s2twp"),
-                                    (label: L("settings.output.opencc.config.s2tw"), value: "s2tw"),
-                                    (label: L("settings.output.opencc.config.s2hk"), value: "s2hk"),
-                                    (label: L("settings.output.opencc.config.t2s"), value: "t2s")
-                                ],
-                                selection: Binding(get: { viewModel.textTransformationRule }, set: { viewModel.setTextTransformationRule($0) }),
-                                width: StudioTheme.Layout.appearancePickerWidth
+                            Toggle(
+                                "",
+                                isOn: Binding(get: { viewModel.textTransformationEnabled }, set: { viewModel.setTextTransformationEnabled($0) })
                             )
+                            .labelsHidden()
+                            .toggleStyle(.switch)
+                        }
+
+                        if viewModel.textTransformationEnabled {
+                            Divider().overlay(StudioTheme.border.opacity(StudioTheme.Opacity.divider))
+
+                            StudioSettingRow(
+                                title: L("settings.output.opencc.config.title"),
+                                subtitle: ""
+                            ) {
+                                StudioMenuPicker(
+                                    options: [
+                                        (label: L("settings.output.opencc.config.s2twp"), value: "s2twp"),
+                                        (label: L("settings.output.opencc.config.s2tw"), value: "s2tw"),
+                                        (label: L("settings.output.opencc.config.s2hk"), value: "s2hk"),
+                                        (label: L("settings.output.opencc.config.t2s"), value: "t2s")
+                                    ],
+                                    selection: Binding(get: { viewModel.textTransformationRule }, set: { viewModel.setTextTransformationRule($0) }),
+                                    width: StudioTheme.Layout.appearancePickerWidth
+                                )
+                            }
                         }
                     }
                 }

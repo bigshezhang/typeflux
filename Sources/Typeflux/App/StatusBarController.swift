@@ -226,10 +226,12 @@ final class StatusBarController: NSObject {
         historyItem.tag = MenuTag.transcriptionHistory
         historyItem.submenu = buildTranscriptionHistoryMenu()
         menu.addItem(historyItem)
-        let textTransformationItem = NSMenuItem(title: L("menu.textTransformation"), action: nil, keyEquivalent: "")
-        textTransformationItem.tag = MenuTag.textTransformation
-        textTransformationItem.submenu = buildTextTransformationMenu()
-        menu.addItem(textTransformationItem)
+        if settingsStore.isTextTransformationAvailable {
+            let textTransformationItem = NSMenuItem(title: L("menu.textTransformation"), action: nil, keyEquivalent: "")
+            textTransformationItem.tag = MenuTag.textTransformation
+            textTransformationItem.submenu = buildTextTransformationMenu()
+            menu.addItem(textTransformationItem)
+        }
         let personasItem = NSMenuItem(title: L("menu.personas"), action: nil, keyEquivalent: "")
         personasItem.tag = MenuTag.personas
         personasItem.submenu = buildPersonasMenu()
@@ -317,7 +319,9 @@ final class StatusBarController: NSObject {
     }
 
     private func populateTextTransformationMenu(_ menu: NSMenu) {
-        let isEnabled = settingsStore.outputOpenCCEnabled
+        guard settingsStore.isTextTransformationAvailable else { return }
+
+        let isEnabled = settingsStore.isOutputOpenCCEffectiveEnabled
         let activeConfig = settingsStore.outputOpenCCConfig
 
         let enableItem = NSMenuItem(
@@ -569,11 +573,13 @@ final class StatusBarController: NSObject {
     }
 
     @objc private func toggleTextTransformation(_ sender: NSMenuItem) {
+        guard settingsStore.isTextTransformationAvailable else { return }
         settingsStore.outputOpenCCEnabled.toggle()
         rebuildMenu()
     }
 
     @objc private func selectTextTransformationRule(_ sender: NSMenuItem) {
+        guard settingsStore.isTextTransformationAvailable else { return }
         guard let rule = sender.representedObject as? String else { return }
         settingsStore.outputOpenCCConfig = rule
         rebuildMenu()

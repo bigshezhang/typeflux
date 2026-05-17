@@ -162,6 +162,10 @@ final class StudioViewModel: ObservableObject {
     @Published var textTransformationRule: String
     @Published var autoUpdateEnabled: Bool
 
+    var isTextTransformationAvailable: Bool {
+        appLanguage == .traditionalChinese
+    }
+
     @Published var stubbornPasteFallbackEnabled: Bool
     @Published var agentFrameworkEnabled: Bool
     @Published var agentEnabled: Bool
@@ -1349,11 +1353,13 @@ final class StudioViewModel: ObservableObject {
     // MARK: - Output Post-Processing
 
     func setTextTransformationEnabled(_ value: Bool) {
+        guard isTextTransformationAvailable else { return }
         textTransformationEnabled = value
         settingsStore.outputOpenCCEnabled = value
     }
 
     func setTextTransformationRule(_ value: String) {
+        guard isTextTransformationAvailable else { return }
         textTransformationRule = value
         settingsStore.outputOpenCCConfig = value
     }

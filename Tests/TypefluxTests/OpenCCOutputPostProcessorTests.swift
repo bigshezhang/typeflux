@@ -3,7 +3,7 @@ import XCTest
 
 final class OpenCCOutputPostProcessorTests: XCTestCase {
     func testDisabledReturnsOriginalText() async {
-        let store = SettingsStore()
+        let store = makeStore()
         store.outputOpenCCEnabled = false
         let processor = OpenCCOutputPostProcessor(settingsStore: store)
 
@@ -12,7 +12,7 @@ final class OpenCCOutputPostProcessorTests: XCTestCase {
     }
 
     func testEmptyStringReturnsEmpty() async {
-        let store = SettingsStore()
+        let store = makeStore()
         store.outputOpenCCEnabled = true
         let processor = OpenCCOutputPostProcessor(settingsStore: store)
 
@@ -21,7 +21,7 @@ final class OpenCCOutputPostProcessorTests: XCTestCase {
     }
 
     func testS2TWPConversion() async {
-        let store = SettingsStore()
+        let store = makeStore()
         store.outputOpenCCEnabled = true
         store.outputOpenCCConfig = "s2twp"
         let processor = OpenCCOutputPostProcessor(settingsStore: store)
@@ -36,7 +36,7 @@ final class OpenCCOutputPostProcessorTests: XCTestCase {
     }
 
     func testS2TWConversion() async {
-        let store = SettingsStore()
+        let store = makeStore()
         store.outputOpenCCEnabled = true
         store.outputOpenCCConfig = "s2tw"
         let processor = OpenCCOutputPostProcessor(settingsStore: store)
@@ -50,7 +50,7 @@ final class OpenCCOutputPostProcessorTests: XCTestCase {
     }
 
     func testS2HKConversion() async {
-        let store = SettingsStore()
+        let store = makeStore()
         store.outputOpenCCEnabled = true
         store.outputOpenCCConfig = "s2hk"
         let processor = OpenCCOutputPostProcessor(settingsStore: store)
@@ -64,7 +64,7 @@ final class OpenCCOutputPostProcessorTests: XCTestCase {
     }
 
     func testT2SConversion() async {
-        let store = SettingsStore()
+        let store = makeStore()
         store.outputOpenCCEnabled = true
         store.outputOpenCCConfig = "t2s"
         let processor = OpenCCOutputPostProcessor(settingsStore: store)
@@ -87,7 +87,7 @@ final class OpenCCOutputPostProcessorTests: XCTestCase {
     }
 
     func testT2SWithAllVariants() async {
-        let store = SettingsStore()
+        let store = makeStore()
         store.outputOpenCCEnabled = true
         store.outputOpenCCConfig = "t2s"
         let processor = OpenCCOutputPostProcessor(settingsStore: store)
@@ -104,7 +104,7 @@ final class OpenCCOutputPostProcessorTests: XCTestCase {
     }
 
     func testAllSupportedConfigurations() async {
-        let store = SettingsStore()
+        let store = makeStore()
         store.outputOpenCCEnabled = true
         let processor = OpenCCOutputPostProcessor(settingsStore: store)
 
@@ -131,7 +131,7 @@ final class OpenCCOutputPostProcessorTests: XCTestCase {
     }
 
     func testT2SWithVariousSources() async {
-        let store = SettingsStore()
+        let store = makeStore()
         store.outputOpenCCEnabled = true
         store.outputOpenCCConfig = "t2s"
         let processor = OpenCCOutputPostProcessor(settingsStore: store)
@@ -147,6 +147,29 @@ final class OpenCCOutputPostProcessorTests: XCTestCase {
         // 測試混合繁體字
         let mixedResult = await processor.process("髮型、發言、聯繫、關係")
         XCTAssertEqual(mixedResult, "发型、发言、联系、关系")
+    }
+
+    func testEnabledReturnsOriginalTextWhenInterfaceLanguageIsNotTraditionalChinese() async {
+        let store = makeStore(appLanguage: .english)
+        store.outputOpenCCEnabled = true
+        store.outputOpenCCConfig = "s2twp"
+        let processor = OpenCCOutputPostProcessor(settingsStore: store)
+
+        let input = "内存和硬盘"
+        let result = await processor.process(input)
+
+        XCTAssertEqual(result, input)
+        XCTAssertFalse(store.isOutputOpenCCEffectiveEnabled)
+        XCTAssertNil(store.effectiveOutputOpenCCConfig)
+    }
+
+    private func makeStore(appLanguage: AppLanguage = .traditionalChinese) -> SettingsStore {
+        let suiteName = "OpenCCOutputPostProcessorTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        let store = SettingsStore(defaults: defaults)
+        store.appLanguage = appLanguage
+        return store
     }
 }
 

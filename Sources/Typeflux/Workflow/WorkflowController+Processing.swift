@@ -208,8 +208,7 @@ extension WorkflowController {
             
             var openCCResult: String? = nil
             let finalAnswer: String
-            if settingsStore.outputOpenCCEnabled {
-                let config = settingsStore.outputOpenCCConfig
+            if let config = settingsStore.effectiveOutputOpenCCConfig {
                 let converted = await outputPostProcessor.process(askDecisionResult.decision.trimmedContent)
                 if converted != askDecisionResult.decision.trimmedContent {
                     openCCResult = converted
@@ -351,8 +350,7 @@ extension WorkflowController {
         // 2. OpenCC
         var openCCResult: String? = nil
         let afterOpenCC: String
-        if settingsStore.outputOpenCCEnabled {
-            let config = settingsStore.outputOpenCCConfig
+        if let config = settingsStore.effectiveOutputOpenCCConfig {
             afterOpenCC = await outputPostProcessor.process(optimizedText)
             openCCResult = afterOpenCC
             record.openCCConfig = config
@@ -449,8 +447,8 @@ extension WorkflowController {
                 )
             }
 
-            await MainActor.run { () in
-                self.soundEffectPlayer.play(.done)
+            await MainActor.run {
+                _ = self.soundEffectPlayer.play(.done)
             }
             let selectedText = recordingIntent == .askSelection
                 ? editingSelectedText(from: selectionSnapshot)
@@ -1265,8 +1263,7 @@ extension WorkflowController {
             
             var openCCResult: String? = nil
             let finalAnswer: String
-            if settingsStore.outputOpenCCEnabled {
-                let config = settingsStore.outputOpenCCConfig
+            if let config = settingsStore.effectiveOutputOpenCCConfig {
                 let converted = await outputPostProcessor.process(text)
                 if converted != text {
                     openCCResult = converted

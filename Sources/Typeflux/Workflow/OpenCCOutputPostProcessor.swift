@@ -12,8 +12,8 @@ final class OpenCCOutputPostProcessor: OutputPostProcessing, @unchecked Sendable
     }
 
     func process(_ text: String) async -> String {
-        // Return original text if conversion is disabled
-        guard settingsStore.outputOpenCCEnabled else {
+        // Return original text if conversion is disabled or unavailable for the current UI language.
+        guard let config = settingsStore.effectiveOutputOpenCCConfig else {
             return text
         }
 
@@ -28,7 +28,6 @@ final class OpenCCOutputPostProcessor: OutputPostProcessing, @unchecked Sendable
             return text
         }
 
-        let config = settingsStore.outputOpenCCConfig
         Self.logger.debug("OpenCC processing start: config=\(config), textLength=\(text.count)")
 
         do {
