@@ -27,6 +27,43 @@ struct TypefluxCloudBillingError: LocalizedError, Equatable {
         }
     }
 
+    func title(hasPaidSubscription: Bool) -> String {
+        switch reason {
+        case .subscriptionRequired:
+            L("cloud.billing.subscriptionRequired.title")
+        case .quotaExceeded:
+            hasPaidSubscription
+                ? L("cloud.billing.quotaExceeded.title")
+                : L("cloud.billing.subscriptionRequired.title")
+        }
+    }
+
+    func message(hasPaidSubscription: Bool) -> String {
+        switch reason {
+        case .subscriptionRequired:
+            L("cloud.billing.subscriptionRequired.body")
+        case .quotaExceeded:
+            hasPaidSubscription
+                ? L("cloud.billing.quotaExceeded.body")
+                : L("cloud.billing.subscriptionRequired.body")
+        }
+    }
+
+    var primaryActionTitle: String {
+        primaryActionTitle(hasPaidSubscription: false)
+    }
+
+    func primaryActionTitle(hasPaidSubscription: Bool) -> String {
+        switch reason {
+        case .subscriptionRequired:
+            L("cloud.billing.action.subscribe")
+        case .quotaExceeded:
+            hasPaidSubscription
+                ? L("cloud.billing.action.openAccount")
+                : L("cloud.billing.action.subscribe")
+        }
+    }
+
     static func fromServerCode(_ code: String, message: String?) -> TypefluxCloudBillingError? {
         let normalizedCode = normalized(code)
         if subscriptionRequiredCodes.contains(normalizedCode) {
@@ -108,6 +145,7 @@ struct TypefluxCloudBillingError: LocalizedError, Equatable {
 
         if quotaExceededCodes.contains(where: { normalizedMessage.contains($0) })
             || normalizedMessage.contains("QUOTA_EXCEEDED")
+            || normalizedMessage.contains("CREDIT_BALANCE_EXHAUSTED")
             || normalizedMessage.contains("CREDIT_EXHAUSTED")
             || normalizedMessage.contains("INSUFFICIENT_CREDITS") {
             return TypefluxCloudBillingError(reason: .quotaExceeded, serverMessage: message)
@@ -132,6 +170,7 @@ struct TypefluxCloudBillingError: LocalizedError, Equatable {
         "ASR_QUOTA_EXCEEDED",
         "LLM_QUOTA_EXCEEDED",
         "INSUFFICIENT_CREDITS",
+        "CREDIT_BALANCE_EXHAUSTED",
         "CREDIT_EXHAUSTED"
     ]
 

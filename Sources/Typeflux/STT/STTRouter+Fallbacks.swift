@@ -62,6 +62,13 @@ extension STTRouter {
             return (transcript: integratedError.transcript, rewritten: nil)
         }
         if let billingError = TypefluxCloudBillingError.fromError(error) {
+            if let localResult = await transcribeWithTypefluxCloudCreditFallbackModelIfAvailable(
+                billingError: billingError,
+                audioFile: audioFile,
+                onUpdate: onASRUpdate
+            ) {
+                return (transcript: localResult, rewritten: nil)
+            }
             throw billingError
         }
         if let fallback = await transcribeWithCloudLoginFallbackIfNeeded(
@@ -133,6 +140,13 @@ extension STTRouter {
     ) async throws -> String {
         NetworkDebugLogger.logError(context: "Typeflux Cloud fallback failed", error: error)
         if let billingError = TypefluxCloudBillingError.fromError(error) {
+            if let localResult = await transcribeWithTypefluxCloudCreditFallbackModelIfAvailable(
+                billingError: billingError,
+                audioFile: audioFile,
+                onUpdate: onUpdate
+            ) {
+                return localResult
+            }
             throw billingError
         }
         if TypefluxCloudLoginRequiredError.fromError(error) != nil,
@@ -159,6 +173,13 @@ extension STTRouter {
     ) async throws -> String {
         NetworkDebugLogger.logError(context: "Typeflux Official STT failed", error: error)
         if let billingError = TypefluxCloudBillingError.fromError(error) {
+            if let localResult = await transcribeWithTypefluxCloudCreditFallbackModelIfAvailable(
+                billingError: billingError,
+                audioFile: audioFile,
+                onUpdate: onUpdate
+            ) {
+                return localResult
+            }
             throw billingError
         }
         if let fallback = await transcribeWithCloudLoginFallbackIfNeeded(
@@ -208,6 +229,30 @@ extension STTRouter {
             return try await fallback.transcribeStream(audioFile: audioFile, onUpdate: onUpdate)
         } catch {
             NetworkDebugLogger.logError(context: "Default SenseVoice fallback failed", error: error)
+            return nil
+        }
+    }
+
+    private func transcribeWithTypefluxCloudCreditFallbackModelIfAvailable(
+        billingError: TypefluxCloudBillingError,
+        audioFile: AudioFile,
+        onUpdate: @escaping @Sendable (TranscriptionSnapshot) async -> Void
+    ) async -> String? {
+        guard billingError.reason == .quotaExceeded,
+              await hasPaidTypefluxCloudSubscription()
+        else {
+            return nil
+        }
+        guard let fallback = typefluxCloudLoginFallbackLocalModel else {
+            return nil
+        }
+        do {
+            NetworkDebugLogger.logMessage(
+                "Falling back to default SenseVoice after Typeflux Cloud credits were exhausted"
+            )
+            return try await fallback.transcribeStream(audioFile: audioFile, onUpdate: onUpdate)
+        } catch {
+            NetworkDebugLogger.logError(context: "Default SenseVoice credit fallback failed", error: error)
             return nil
         }
     }

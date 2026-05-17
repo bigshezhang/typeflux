@@ -81,6 +81,7 @@ final class STTRouter {
     let typefluxCloudLoginFallbackLocalModel: Transcriber?
     let autoModelDownloadService: AutoModelDownloadService?
     let isTypefluxCloudLoggedIn: @Sendable () async -> Bool
+    let hasPaidTypefluxCloudSubscription: @Sendable () async -> Bool
 
     init(
         settingsStore: SettingsStore,
@@ -98,6 +99,9 @@ final class STTRouter {
         autoModelDownloadService: AutoModelDownloadService? = nil,
         isTypefluxCloudLoggedIn: @escaping @Sendable () async -> Bool = {
             await MainActor.run { AuthState.shared.isLoggedIn }
+        },
+        hasPaidTypefluxCloudSubscription: @escaping @Sendable () async -> Bool = {
+            await MainActor.run { AuthState.shared.subscription.hasPaidSubscription }
         }
     ) {
         self.settingsStore = settingsStore
@@ -114,6 +118,7 @@ final class STTRouter {
         self.typefluxCloudLoginFallbackLocalModel = typefluxCloudLoginFallbackLocalModel
         self.autoModelDownloadService = autoModelDownloadService
         self.isTypefluxCloudLoggedIn = isTypefluxCloudLoggedIn
+        self.hasPaidTypefluxCloudSubscription = hasPaidTypefluxCloudSubscription
     }
 
     func transcribe(

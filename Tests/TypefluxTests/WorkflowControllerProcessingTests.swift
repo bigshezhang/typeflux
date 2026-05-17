@@ -1006,6 +1006,47 @@ final class WorkflowControllerProcessingTests: XCTestCase {
         XCTFail("Expected local model download failure status")
     }
 
+    @MainActor
+    func testPaidCreditExhaustedPromptIsSuppressedForOneHour() {
+        let controller = makeWorkflowController()
+        let error = TypefluxCloudBillingError(reason: .quotaExceeded, serverMessage: nil)
+        let firstPresentation = Date(timeIntervalSince1970: 1_000)
+
+        XCTAssertTrue(controller.shouldPresentCloudBillingError(
+            error,
+            hasPaidSubscription: true,
+            now: firstPresentation
+        ))
+        XCTAssertFalse(controller.shouldPresentCloudBillingError(
+            error,
+            hasPaidSubscription: true,
+            now: firstPresentation.addingTimeInterval(30 * 60)
+        ))
+        XCTAssertTrue(controller.shouldPresentCloudBillingError(
+            error,
+            hasPaidSubscription: true,
+            now: firstPresentation.addingTimeInterval(60 * 60)
+        ))
+    }
+
+    @MainActor
+    func testFreeCreditExhaustedPromptIsNotSuppressed() {
+        let controller = makeWorkflowController()
+        let error = TypefluxCloudBillingError(reason: .quotaExceeded, serverMessage: nil)
+        let firstPresentation = Date(timeIntervalSince1970: 1_000)
+
+        XCTAssertTrue(controller.shouldPresentCloudBillingError(
+            error,
+            hasPaidSubscription: false,
+            now: firstPresentation
+        ))
+        XCTAssertTrue(controller.shouldPresentCloudBillingError(
+            error,
+            hasPaidSubscription: false,
+            now: firstPresentation.addingTimeInterval(30 * 60)
+        ))
+    }
+
     private func makeWorkflowController(
         textInjector: TextInjector = MockProcessingTextInjector(),
         audioRecorder: AudioRecorder = MockProcessingAudioRecorder(),

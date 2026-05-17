@@ -62,6 +62,38 @@ final class TypefluxCloudServerErrorMessageTests: XCTestCase {
         )
     }
 
+    func testBillingErrorPrimaryActionMatchesReason() {
+        withEnglishLocalization {
+            let subscriptionRequired = TypefluxCloudBillingError(reason: .subscriptionRequired, serverMessage: nil)
+            let quotaExceeded = TypefluxCloudBillingError(reason: .quotaExceeded, serverMessage: nil)
+
+            XCTAssertEqual(
+                subscriptionRequired.title(hasPaidSubscription: false),
+                "Typeflux Cloud needs a subscription"
+            )
+            XCTAssertEqual(quotaExceeded.title(hasPaidSubscription: false), "Typeflux Cloud needs a subscription")
+            XCTAssertEqual(quotaExceeded.title(hasPaidSubscription: true), "Typeflux Cloud credits used up")
+            XCTAssertEqual(
+                subscriptionRequired.primaryActionTitle,
+                "Subscribe"
+            )
+            XCTAssertEqual(
+                quotaExceeded.primaryActionTitle,
+                "Subscribe"
+            )
+            XCTAssertEqual(
+                quotaExceeded.primaryActionTitle(hasPaidSubscription: true),
+                "Open Account"
+            )
+        }
+    }
+
+    func testBillingErrorParsesCreditBalanceExhaustedMessage() {
+        let message = "request failed: credit_balance_exhausted"
+
+        XCTAssertEqual(TypefluxCloudBillingError.fromMessage(message)?.reason, .quotaExceeded)
+    }
+
     func testUnknownCodeUsesTrimmedServerMessageThenFallback() {
         XCTAssertEqual(
             TypefluxCloudServerErrorMessage.userMessage(

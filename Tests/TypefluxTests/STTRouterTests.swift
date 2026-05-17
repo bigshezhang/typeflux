@@ -175,7 +175,8 @@ final class STTRouterTests: XCTestCase {
         doubaoRealtimeOverride: Transcriber? = nil,
         typefluxOfficialOverride: Transcriber? = nil,
         typefluxCloudLoginFallbackLocalModel: Transcriber? = nil,
-        isTypefluxCloudLoggedIn: @escaping @Sendable () async -> Bool = { false }
+        isTypefluxCloudLoggedIn: @escaping @Sendable () async -> Bool = { false },
+        hasPaidTypefluxCloudSubscription: @escaping @Sendable () async -> Bool = { false }
     ) -> STTRouter {
         STTRouter(
             settingsStore: settings,
@@ -190,7 +191,8 @@ final class STTRouterTests: XCTestCase {
             groq: groq,
             typefluxOfficial: typefluxOfficialOverride ?? typefluxOfficial,
             typefluxCloudLoginFallbackLocalModel: typefluxCloudLoginFallbackLocalModel,
-            isTypefluxCloudLoggedIn: isTypefluxCloudLoggedIn
+            isTypefluxCloudLoggedIn: isTypefluxCloudLoggedIn,
+            hasPaidTypefluxCloudSubscription: hasPaidTypefluxCloudSubscription
         )
     }
 
@@ -356,6 +358,54 @@ final class STTRouterTests: XCTestCase {
         XCTAssertEqual(appleSpeech.transcribeCallCount, 0)
     }
 
+    func testTypefluxOfficialQuotaFailureUsesDefaultSenseVoiceFallbackForPaidSubscription() async throws {
+        let billingError = TypefluxCloudBillingError(reason: .quotaExceeded, serverMessage: nil)
+        settings.sttProvider = .typefluxOfficial
+        settings.localOptimizationEnabled = false
+        settings.useAppleSpeechFallback = false
+        typefluxOfficial.errorToThrow = billingError
+        let defaultSenseVoiceFallback = MockTranscriber()
+        defaultSenseVoiceFallback.resultToReturn = "sensevoice fallback"
+        let router = makeRouter(
+            typefluxCloudLoginFallbackLocalModel: defaultSenseVoiceFallback,
+            hasPaidTypefluxCloudSubscription: { true }
+        )
+
+        let result = try await router.transcribe(audioFile: dummyAudioFile())
+
+        XCTAssertEqual(result, "sensevoice fallback")
+        XCTAssertEqual(typefluxOfficial.transcribeCallCount, 1)
+        XCTAssertEqual(defaultSenseVoiceFallback.transcribeCallCount, 1)
+        XCTAssertEqual(appleSpeech.transcribeCallCount, 0)
+    }
+
+    func testTypefluxOfficialQuotaFailureDoesNotUseDefaultSenseVoiceFallbackForFreePlan() async throws {
+        let billingError = TypefluxCloudBillingError(reason: .quotaExceeded, serverMessage: nil)
+        settings.sttProvider = .typefluxOfficial
+        settings.localOptimizationEnabled = false
+        settings.useAppleSpeechFallback = false
+        typefluxOfficial.errorToThrow = billingError
+        let defaultSenseVoiceFallback = MockTranscriber()
+        defaultSenseVoiceFallback.resultToReturn = "sensevoice fallback"
+        let router = makeRouter(
+            typefluxCloudLoginFallbackLocalModel: defaultSenseVoiceFallback,
+            hasPaidTypefluxCloudSubscription: { false }
+        )
+
+        do {
+            _ = try await router.transcribe(audioFile: dummyAudioFile())
+            XCTFail("Expected billing error")
+        } catch let error as TypefluxCloudBillingError {
+            XCTAssertEqual(error, billingError)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+
+        XCTAssertEqual(typefluxOfficial.transcribeCallCount, 1)
+        XCTAssertEqual(defaultSenseVoiceFallback.transcribeCallCount, 0)
+        XCTAssertEqual(appleSpeech.transcribeCallCount, 0)
+    }
+
     func testTypefluxOfficialLoginRequiredFallsBackToAppleSpeech() async throws {
         settings.sttProvider = .typefluxOfficial
         settings.useAppleSpeechFallback = true
@@ -412,6 +462,36 @@ final class STTRouterTests: XCTestCase {
         let router = makeRouter(
             typefluxOfficialOverride: integrated,
             typefluxCloudLoginFallbackLocalModel: defaultSenseVoiceFallback
+        )
+
+        let result = try await router.transcribeStreamWithLLMRewrite(
+            audioFile: dummyAudioFile(),
+            llmConfig: ASRLLMConfig(systemPrompt: "sys", userPromptTemplate: "{{transcript}}"),
+            scenario: .voiceInput,
+            onASRUpdate: { _ in },
+            onLLMStart: {},
+            onLLMChunk: { _ in }
+        )
+
+        XCTAssertEqual(result.transcript, "sensevoice fallback")
+        XCTAssertNil(result.rewritten)
+        XCTAssertEqual(integrated.integratedCallCount, 1)
+        XCTAssertEqual(defaultSenseVoiceFallback.transcribeCallCount, 1)
+        XCTAssertEqual(appleSpeech.transcribeCallCount, 0)
+    }
+
+    func testIntegratedTypefluxQuotaFailureUsesDefaultSenseVoiceFallbackForPaidSubscription() async throws {
+        settings.sttProvider = .typefluxOfficial
+        settings.localOptimizationEnabled = false
+        settings.useAppleSpeechFallback = false
+        let integrated = MockIntegratedTypefluxTranscriber()
+        integrated.errorToThrow = TypefluxCloudBillingError(reason: .quotaExceeded, serverMessage: nil)
+        let defaultSenseVoiceFallback = MockTranscriber()
+        defaultSenseVoiceFallback.resultToReturn = "sensevoice fallback"
+        let router = makeRouter(
+            typefluxOfficialOverride: integrated,
+            typefluxCloudLoginFallbackLocalModel: defaultSenseVoiceFallback,
+            hasPaidTypefluxCloudSubscription: { true }
         )
 
         let result = try await router.transcribeStreamWithLLMRewrite(

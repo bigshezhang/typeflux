@@ -31,6 +31,7 @@ final class WorkflowController {
     static let audioStartupMaxAttemptCount = 3
     static let audioStartupRetryDelay: Duration = .milliseconds(250)
     static let llmTimeoutAfterTranscriptionSeconds: TimeInterval = 30
+    static let paidCreditExhaustedPromptSuppressionInterval: TimeInterval = 60 * 60
     var llmTimeoutAfterTranscription: TimeInterval = WorkflowController.llmTimeoutAfterTranscriptionSeconds
     struct LLMRequestTimeoutError: LocalizedError {
         var errorDescription: String? {
@@ -136,6 +137,7 @@ final class WorkflowController {
     var isHistoryPickerPresented = false
     var historyPickerItems: [HistoryPickerEntry] = []
     var historyPickerSelectedIndex = 0
+    var lastPaidCreditExhaustedPromptPresentedAt: Date?
 
     // Clarification mode: set when the agent workflow is paused waiting for a user voice reply.
     var pendingClarificationContinuation: CheckedContinuation<String, Error>?
@@ -1276,12 +1278,20 @@ final class WorkflowController {
 
     func presentCloudBillingError(_ error: TypefluxCloudBillingError) async {
         await MainActor.run {
+            let hasPaidSubscription = AuthState.shared.subscription.hasPaidSubscription
+            guard self.shouldPresentCloudBillingError(
+                error,
+                hasPaidSubscription: hasPaidSubscription
+            ) else {
+                return
+            }
+
             self.shouldPreserveLLMConfigurationNotice = true
             self.soundEffectPlayer.play(.tip)
 
             let actions: [OverlayFailureAction] = [
                 OverlayFailureAction(
-                    title: L("cloud.billing.action.subscribe"),
+                    title: error.primaryActionTitle(hasPaidSubscription: hasPaidSubscription),
                     isRetry: false,
                     trailingSystemImage: "arrow.up.right",
                     handler: { [weak self] in
@@ -1309,12 +1319,32 @@ final class WorkflowController {
             ]
 
             self.overlayController.showFailureWithActions(
-                title: error.title,
-                message: error.localizedDescription,
+                title: error.title(hasPaidSubscription: hasPaidSubscription),
+                message: error.message(hasPaidSubscription: hasPaidSubscription),
                 tone: .billing,
                 actions: actions
             )
         }
+    }
+
+    @MainActor
+    func shouldPresentCloudBillingError(
+        _ error: TypefluxCloudBillingError,
+        hasPaidSubscription: Bool,
+        now: Date = Date()
+    ) -> Bool {
+        guard error.reason == .quotaExceeded, hasPaidSubscription else {
+            return true
+        }
+
+        if let lastPaidCreditExhaustedPromptPresentedAt,
+           now.timeIntervalSince(lastPaidCreditExhaustedPromptPresentedAt)
+            < Self.paidCreditExhaustedPromptSuppressionInterval {
+            return false
+        }
+
+        lastPaidCreditExhaustedPromptPresentedAt = now
+        return true
     }
 }
 
