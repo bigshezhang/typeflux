@@ -126,6 +126,7 @@ final class StudioViewModel: ObservableObject {
     @Published var multimodalLLMAPIKey: String
 
     @Published var aliCloudAPIKey: String
+    @Published var aliCloudModel: String
     @Published var doubaoAppID: String
     @Published var doubaoAccessToken: String
     @Published var doubaoResourceID: String
@@ -330,6 +331,7 @@ final class StudioViewModel: ObservableObject {
         multimodalLLMModel = settingsStore.multimodalLLMModel
         multimodalLLMAPIKey = settingsStore.multimodalLLMAPIKey
         aliCloudAPIKey = settingsStore.aliCloudAPIKey
+        aliCloudModel = settingsStore.aliCloudModel
         doubaoAppID = settingsStore.doubaoAppID
         doubaoAccessToken = settingsStore.doubaoAccessToken
         doubaoResourceID = settingsStore.doubaoResourceID
@@ -1222,6 +1224,10 @@ final class StudioViewModel: ObservableObject {
 
     func setAliCloudAPIKey(_ value: String) {
         aliCloudAPIKey = value; sttConnectionTestState = .idle
+    }
+
+    func setAliCloudModel(_ value: String) {
+        aliCloudModel = value; sttConnectionTestState = .idle
     }
 
     func setDoubaoAppID(_ value: String) {
@@ -2376,6 +2382,7 @@ final class StudioViewModel: ObservableObject {
             settingsStore.multimodalLLMAPIKey = multimodalLLMAPIKey
         case .aliCloud:
             settingsStore.aliCloudAPIKey = aliCloudAPIKey
+            settingsStore.aliCloudModel = aliCloudModel
         case .doubaoRealtime:
             settingsStore.doubaoAppID = doubaoAppID
             settingsStore.doubaoAccessToken = doubaoAccessToken
@@ -2551,6 +2558,7 @@ final class StudioViewModel: ObservableObject {
         let capturedMultimodalModel = multimodalLLMModel
         let capturedMultimodalAPIKey = multimodalLLMAPIKey
         let capturedAliCloudAPIKey = aliCloudAPIKey
+        let capturedAliCloudModel = aliCloudModel
         let capturedDoubaoAppID = doubaoAppID
         let capturedDoubaoAccessToken = doubaoAccessToken
         let capturedDoubaoResourceID = doubaoResourceID
@@ -2582,7 +2590,10 @@ final class StudioViewModel: ObservableObject {
                             apiKey: capturedMultimodalAPIKey
                         )
                     case .aliCloud:
-                        try await AliCloudRealtimeTranscriber.testConnection(apiKey: capturedAliCloudAPIKey)
+                        try await AliCloudRealtimeTranscriber.testConnection(
+                            apiKey: capturedAliCloudAPIKey,
+                            model: capturedAliCloudModel
+                        )
                     case .doubaoRealtime:
                         try await DoubaoRealtimeTranscriber.testConnection(
                             appID: capturedDoubaoAppID,

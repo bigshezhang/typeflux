@@ -265,8 +265,19 @@ final class SettingsStore {
     }
 
     var aliCloudModel: String {
-        get { AliCloudASRDefaults.model }
-        set { defaults.removeObject(forKey: "stt.alicloud.model") }
+        get {
+            let stored = defaults.string(forKey: "stt.alicloud.model")?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return stored.isEmpty ? AliCloudASRDefaults.model : stored
+        }
+        set {
+            let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.isEmpty {
+                defaults.removeObject(forKey: "stt.alicloud.model")
+            } else {
+                defaults.set(trimmed, forKey: "stt.alicloud.model")
+            }
+        }
     }
 
     var doubaoAppID: String {

@@ -4486,7 +4486,7 @@ struct StudioView: View {
                     name: STTProvider.aliCloud.displayName,
                     summary: L("settings.models.card.aliCloud.summary"),
                     badge: L("settings.models.badge.api"),
-                    metadata: L("settings.models.builtInDefaultModel"),
+                    metadata: viewModel.aliCloudModel,
                     isSelected: viewModel.sttProvider == .aliCloud,
                     isMuted: false,
                     actionTitle: L("settings.models.useAliCloud")
@@ -5100,6 +5100,15 @@ struct StudioView: View {
 
             case .aliCloud:
                 VStack(alignment: .leading, spacing: StudioTheme.Spacing.small) {
+                    StudioSuggestedTextInputCard(
+                        label: L("common.model"),
+                        placeholder: AliCloudASRDefaults.model,
+                        text: Binding(
+                            get: { viewModel.aliCloudModel },
+                            set: viewModel.setAliCloudModel
+                        ),
+                        suggestions: AliCloudASRDefaults.suggestedModels
+                    )
                     StudioTextInputCard(
                         label: L("common.apiKey"), placeholder: "sk-...",
                         text: Binding(
@@ -6079,7 +6088,7 @@ struct StudioView: View {
             viewModel.multimodalLLMModel.isEmpty
                 ? OpenAIAudioModelCatalog.multimodalModels[0] : viewModel.multimodalLLMModel
         case .aliCloud:
-            AliCloudASRDefaults.model
+            viewModel.aliCloudModel
         case .doubaoRealtime:
             L("settings.models.doubao.productName")
         case .googleCloud:

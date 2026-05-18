@@ -33,6 +33,29 @@ final class SettingsViewModelCloudDefaultsTests: XCTestCase {
         XCTAssertEqual(viewModel.focusedModelProvider, .typefluxCloud)
     }
 
+    func testAliCloudModelConfigurationCanBeSelectedAndSaved() throws {
+        let suiteName = "SettingsViewModelCloudDefaultsTests.aliCloud.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let settingsStore = SettingsStore(defaults: defaults)
+        settingsStore.aliCloudModel = "fun-asr-realtime"
+        let viewModel = StudioViewModel(
+            settingsStore: settingsStore,
+            historyStore: EmptyHistoryStore(),
+            initialSection: .models,
+            modelManager: NoopOllamaModelManager(),
+            localModelManager: NoopLocalSTTModelManager()
+        )
+
+        XCTAssertEqual(viewModel.aliCloudModel, "fun-asr-realtime")
+
+        viewModel.focusModelProvider(.aliCloud)
+        viewModel.setAliCloudModel("paraformer-realtime-v2")
+        viewModel.applyModelConfiguration(shouldShowToast: false)
+
+        XCTAssertEqual(settingsStore.aliCloudModel, "paraformer-realtime-v2")
+    }
+
     func testUnavailableLocalSTTModelFocusDoesNotCommitUntilPrepareSucceeds() async throws {
         let suiteName = "SettingsViewModelCloudDefaultsTests.localSTT.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))

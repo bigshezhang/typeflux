@@ -330,6 +330,17 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertEqual(store.aliCloudModel, "paraformer-realtime-v2")
     }
 
+    func testSetAndGetAliCloudModel() {
+        store.aliCloudModel = "fun-asr-realtime"
+        XCTAssertEqual(store.aliCloudModel, "fun-asr-realtime")
+    }
+
+    func testEmptyAliCloudModelFallsBackToDefault() {
+        store.aliCloudModel = "fun-asr-realtime"
+        store.aliCloudModel = "   "
+        XCTAssertEqual(store.aliCloudModel, "paraformer-realtime-v2")
+    }
+
     func testAliCloudSuggestedModelsIncludeParaformerRealtimeV2() {
         XCTAssertEqual(AliCloudASRDefaults.suggestedModels.first, "paraformer-realtime-v2")
         XCTAssertTrue(AliCloudASRDefaults.suggestedModels.contains("fun-asr-realtime"))
