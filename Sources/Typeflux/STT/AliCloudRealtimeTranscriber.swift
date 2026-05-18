@@ -182,6 +182,37 @@ private enum AliCloudAudioConverter {
     }
 }
 
+// MARK: - FunASR Request Configuration
+
+enum AliCloudFunASRRequestConfiguration {
+    static func parameters(for model: String) -> [String: Any] {
+        let normalizedModel = model.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard isParaformerRealtimeV2(normalizedModel) else {
+            return [
+                "format": "pcm",
+                "sample_rate": 16000,
+                "semantic_punctuation_enabled": true,
+                "max_sentence_silence": 800,
+                "heartbeat": false
+            ]
+        }
+
+        return [
+            "format": "pcm",
+            "sample_rate": 16000,
+            "disfluency_removal_enabled": true,
+            "semantic_punctuation_enabled": false,
+            "max_sentence_silence": 800,
+            "punctuation_prediction_enabled": true,
+            "heartbeat": false
+        ]
+    }
+
+    private static func isParaformerRealtimeV2(_ normalizedModel: String) -> Bool {
+        normalizedModel == "paraformer-realtime-v2"
+    }
+}
+
 // MARK: - FunASR Session (DashScope WebSocket protocol)
 
 actor AliCloudFunASRSession: PCM16RealtimeTranscriptionSession {
@@ -262,13 +293,7 @@ actor AliCloudFunASRSession: PCM16RealtimeTranscriptionSession {
                 "task": "asr",
                 "function": "recognition",
                 "model": model,
-                "parameters": [
-                    "format": "pcm",
-                    "sample_rate": 16000,
-                    "semantic_punctuation_enabled": true,
-                    "max_sentence_silence": 800,
-                    "heartbeat": false
-                ],
+                "parameters": AliCloudFunASRRequestConfiguration.parameters(for: model),
                 "input": [String: Any]()
             ]
         ]
