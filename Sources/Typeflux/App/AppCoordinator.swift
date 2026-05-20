@@ -8,6 +8,7 @@ final class AppCoordinator {
     private var workflowController: WorkflowController?
     private var onboardingWindowController: OnboardingWindowController?
     private let cloudEndpointProbeScheduler = CloudEndpointProbeScheduler()
+    private let asrPublicConfigRefreshScheduler = TypefluxASRPublicConfigRefreshScheduler()
 
     // swiftlint:disable:next function_body_length
     func start() {
@@ -86,6 +87,7 @@ final class AppCoordinator {
         AutoUpdater.shared.startAutoCheck(settingsStore: di.settingsStore)
         UsageStatsStore.shared.backfillIfNeeded(from: di.historyStore)
         cloudEndpointProbeScheduler.start()
+        asrPublicConfigRefreshScheduler.start()
         Task { await AuthState.shared.refreshTokenIfNeeded() }
 
         if !di.settingsStore.isOnboardingCompleted {
@@ -97,6 +99,7 @@ final class AppCoordinator {
 
     func stop() {
         cloudEndpointProbeScheduler.stop()
+        asrPublicConfigRefreshScheduler.stop()
         workflowController?.stop()
         statusBarController?.stop()
     }

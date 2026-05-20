@@ -19,6 +19,16 @@ final class TypefluxOfficialTranscriberTests: XCTestCase {
         XCTAssertNotNil(request.value(forHTTPHeaderField: TypefluxCloudRequestHeaders.clientIDField))
     }
 
+    func testWebSocketRequestConvertsHTTPPrefixToWS() throws {
+        let request = try TypefluxOfficialASRRequestFactory.makeWebSocketRequest(
+            apiBaseURL: "http://asr-2.example.com/",
+            token: "token-123",
+            scenario: .voiceInput
+        )
+
+        XCTAssertEqual(request.url?.absoluteString, "ws://asr-2.example.com/api/v1/asr/ws/default")
+    }
+
     func testWebSocketRequestIncludesPersonaIDHeaderWhenProvided() throws {
         let personaID = SettingsStore.defaultPersonaID
 

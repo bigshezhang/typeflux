@@ -60,39 +60,28 @@ protocol TypefluxOfficialASRTransport: Sendable {
         onLLMStart: @escaping @Sendable () async -> Void,
         onLLMChunk: @escaping @Sendable (String) async -> Void
     ) async throws -> (transcript: String, rewritten: String?)
-
-    func transcribeViaDirectAliyun(
-        pcmData: Data,
-        token: String,
-        model: String,
-        onUpdate: @escaping @Sendable (TranscriptionSnapshot) async -> Void
-    ) async throws -> String
-
-    func makeDirectAliyunPCMStream(
-        token: String,
-        model: String,
-        onUpdate: @escaping @Sendable (TranscriptionSnapshot) async -> Void
-    ) -> any PCM16RealtimeTranscriptionSession
 }
 
 // MARK: - Main Transcriber
 
 final class TypefluxOfficialTranscriber: TypefluxCloudScenarioAwareTranscriber, TypefluxCloudLLMIntegratedTranscriber,
     RealtimeTranscriptionSessionFactory {
-    private let logger = Logger(subsystem: "ai.gulu.app.typeflux", category: "TypefluxOfficialTranscriber")
     private let routingClient: any TypefluxOfficialASRRoutingClient
     private let transport: any TypefluxOfficialASRTransport
+    private let serverRegistry: any TypefluxASRServerProviding
     private let accessTokenProvider: @Sendable () async -> String?
 
     init(
         routingClient: any TypefluxOfficialASRRoutingClient = TypefluxOfficialASRRoutingHTTPClient(),
         transport: any TypefluxOfficialASRTransport = DefaultTypefluxOfficialASRTransport(),
+        serverRegistry: any TypefluxASRServerProviding = TypefluxASRServerRegistry.shared,
         accessTokenProvider: @escaping @Sendable () async -> String? = {
             await MainActor.run { AuthState.shared.accessToken }
         }
     ) {
         self.routingClient = routingClient
         self.transport = transport
+        self.serverRegistry = serverRegistry
         self.accessTokenProvider = accessTokenProvider
     }
 
@@ -108,28 +97,22 @@ final class TypefluxOfficialTranscriber: TypefluxCloudScenarioAwareTranscriber, 
 
         let pcmData = try CloudASRAudioConverter.convert(url: audioFile.fileURL)
         let route = try await routingClient.fetchRoute(accessToken: token, scenario: scenario)
-        if case let .aliyun(aliyunToken, model, _, usageReportID) = route {
-            let transcript = try await transport.transcribeViaDirectAliyun(
-                pcmData: pcmData,
-                token: aliyunToken,
-                model: model,
-                onUpdate: onUpdate
-            )
-            reportAliyunUsageInBackground(
-                accessToken: token,
-                usageReportID: usageReportID,
-                pcm16ByteCount: pcmData.count,
-                outputChars: transcript.count,
-                scenario: scenario
-            )
-            return transcript
+        let asrToken: String
+        let serverBaseURLs: [URL]
+        switch route {
+        case let .webSocket(token, _, _, _, servers):
+            asrToken = token
+            serverBaseURLs = servers
         }
 
-        return try await Self.runWithEndpointFailover { apiBaseURL in
+        return try await Self.runWithASRServerFailover(
+            preferredServers: serverBaseURLs,
+            serverRegistry: serverRegistry
+        ) { apiBaseURL in
             try await transport.transcribeViaWebSocket(
                 pcmData: pcmData,
                 apiBaseURL: apiBaseURL,
-                token: token,
+                token: asrToken,
                 scenario: scenario,
                 onUpdate: onUpdate
             )
@@ -151,28 +134,22 @@ final class TypefluxOfficialTranscriber: TypefluxCloudScenarioAwareTranscriber, 
 
         let pcmData = try CloudASRAudioConverter.convert(url: audioFile.fileURL)
         let route = try await routingClient.fetchRoute(accessToken: token, scenario: scenario)
-        if case let .aliyun(aliyunToken, model, _, usageReportID) = route {
-            let transcript = try await transport.transcribeViaDirectAliyun(
-                pcmData: pcmData,
-                token: aliyunToken,
-                model: model,
-                onUpdate: onASRUpdate
-            )
-            reportAliyunUsageInBackground(
-                accessToken: token,
-                usageReportID: usageReportID,
-                pcm16ByteCount: pcmData.count,
-                outputChars: transcript.count,
-                scenario: scenario
-            )
-            return (transcript: transcript, rewritten: nil)
+        let asrToken: String
+        let serverBaseURLs: [URL]
+        switch route {
+        case let .webSocket(token, _, _, _, servers):
+            asrToken = token
+            serverBaseURLs = servers
         }
 
-        return try await Self.runWithEndpointFailover { apiBaseURL in
+        return try await Self.runWithASRServerFailover(
+            preferredServers: serverBaseURLs,
+            serverRegistry: serverRegistry
+        ) { apiBaseURL in
             try await transport.transcribeViaWebSocketWithLLM(
                 pcmData: pcmData,
                 apiBaseURL: apiBaseURL,
-                token: token,
+                token: asrToken,
                 scenario: scenario,
                 llmConfig: llmConfig,
                 onASRUpdate: onASRUpdate,
@@ -187,35 +164,30 @@ final class TypefluxOfficialTranscriber: TypefluxCloudScenarioAwareTranscriber, 
         onUpdate: @escaping @Sendable (TranscriptionSnapshot) async -> Void
     ) async throws -> any RealtimeTranscriptionSession {
         BufferedRealtimeTranscriptionSession(
-            upstream: DeferredPCM16RealtimeTranscriptionSession { [accessTokenProvider, routingClient, transport] in
+            upstream: DeferredPCM16RealtimeTranscriptionSession {
+                [accessTokenProvider, routingClient, serverRegistry] in
                 let token = await accessTokenProvider()
                 guard let token, !token.isEmpty else {
                     throw TypefluxOfficialASRError.notLoggedIn
                 }
 
                 let route = try await routingClient.fetchRoute(accessToken: token, scenario: scenario)
-                if case let .aliyun(aliyunToken, model, _, usageReportID) = route {
-                    return TypefluxOfficialAliyunUsageReportingPCMStream(
-                        upstream: transport.makeDirectAliyunPCMStream(
-                            token: aliyunToken,
-                            model: model,
-                            onUpdate: onUpdate
-                        ),
-                        accessToken: token,
-                        usageReportID: usageReportID,
-                        scenario: scenario,
-                        routingClient: routingClient
-                    )
+                let asrToken: String
+                let serverBaseURLs: [URL]
+                switch route {
+                case let .webSocket(token, _, _, _, servers):
+                    asrToken = token
+                    serverBaseURLs = servers
                 }
 
-                let baseURLs = await Self.realtimeCandidateBaseURLs()
+                let baseURLs = await serverRegistry.orderedServers(preferred: serverBaseURLs)
                 guard let baseURL = baseURLs.first else {
                     throw TypefluxOfficialASRError.connectionFailed("No Typeflux Cloud endpoint configured.")
                 }
 
                 return TypefluxOfficialRealtimePCMStream(
                     apiBaseURL: baseURL.absoluteString,
-                    token: token,
+                    token: asrToken,
                     scenario: scenario,
                     onUpdate: onUpdate
                 )
@@ -232,36 +204,19 @@ final class TypefluxOfficialTranscriber: TypefluxCloudScenarioAwareTranscriber, 
         let pcmData = RemoteSTTTestAudio.pcm16MonoSilence()
         let routingClient = TypefluxOfficialASRRoutingHTTPClient()
         let route = try await routingClient.fetchRoute(accessToken: token, scenario: .modelSetup)
-        if case let .aliyun(aliyunToken, model, _, usageReportID) = route {
-            let transcript = try await AliCloudFunASRSession.run(
-                pcmData: pcmData,
-                model: model,
-                apiKey: aliyunToken
-            ) { _ in }
-            let audioDurationMs = TypefluxOfficialASRUsageMeter.audioDurationMilliseconds(
-                pcm16ByteCount: pcmData.count
-            )
-            Task.detached(priority: .utility) {
-                do {
-                    try await routingClient.reportAliyunUsage(
-                        accessToken: token,
-                        usageReportID: usageReportID,
-                        audioDurationMs: audioDurationMs,
-                        outputChars: transcript.count,
-                        scenario: .modelSetup
-                    )
-                } catch {
-                    NetworkDebugLogger.logError(context: "Aliyun test ASR usage report failed", error: error)
-                }
-            }
-            return transcript
+        let asrToken: String
+        let serverBaseURLs: [URL]
+        switch route {
+        case let .webSocket(token, _, _, _, servers):
+            asrToken = token
+            serverBaseURLs = servers
         }
 
-        return try await runWithEndpointFailover { apiBaseURL in
+        return try await runWithASRServerFailover(preferredServers: serverBaseURLs) { apiBaseURL in
             try await TypefluxOfficialASRSession.run(
                 pcmData: pcmData,
                 apiBaseURL: apiBaseURL,
-                token: token,
+                token: asrToken,
                 scenario: .modelSetup
             ) { _ in }
         }
@@ -272,13 +227,12 @@ final class TypefluxOfficialTranscriber: TypefluxCloudScenarioAwareTranscriber, 
     /// fails. Once a session begins streaming results we let it run to
     /// completion against the chosen endpoint — mid-session migration is not
     /// supported because that would risk reordering or duplicating audio.
-    static func runWithEndpointFailover<T>(
+    static func runWithASRServerFailover<T>(
+        preferredServers: [URL],
+        serverRegistry: any TypefluxASRServerProviding = TypefluxASRServerRegistry.shared,
         operation: @Sendable (String) async throws -> T
     ) async throws -> T {
-        let urls = await CloudEndpointRegistry.shared.latencyOptimizedEndpoints()
-        let baseURLs: [URL] = urls.isEmpty
-            ? [URL(string: AppServerConfiguration.apiBaseURL)].compactMap(\.self)
-            : urls
+        let baseURLs = await serverRegistry.orderedServers(preferred: preferredServers)
 
         guard !baseURLs.isEmpty else {
             throw TypefluxOfficialASRError.connectionFailed("No Typeflux Cloud endpoint configured.")
@@ -293,48 +247,16 @@ final class TypefluxOfficialTranscriber: TypefluxCloudScenarioAwareTranscriber, 
             } catch let error where TypefluxCloudBillingError.fromError(error) != nil {
                 throw TypefluxCloudBillingError.fromError(error) ?? error
             } catch let error as TypefluxOfficialASRError {
-                await CloudEndpointRegistry.shared.reportFailure(baseURL, error: error)
+                await serverRegistry.reportFailure(baseURL, error: error)
                 lastError = error
                 continue
             } catch {
-                await CloudEndpointRegistry.shared.reportFailure(baseURL, error: error)
+                await serverRegistry.reportFailure(baseURL, error: error)
                 lastError = error
                 continue
             }
         }
         throw lastError ?? TypefluxOfficialASRError.connectionFailed("All endpoints failed.")
-    }
-
-    private static func realtimeCandidateBaseURLs() async -> [URL] {
-        let urls = await CloudEndpointRegistry.shared.latencyOptimizedEndpoints()
-        if !urls.isEmpty { return urls }
-        return [URL(string: AppServerConfiguration.apiBaseURL)].compactMap(\.self)
-    }
-
-    private func reportAliyunUsageInBackground(
-        accessToken: String,
-        usageReportID: String,
-        pcm16ByteCount: Int,
-        outputChars: Int,
-        scenario: TypefluxCloudScenario
-    ) {
-        let audioDurationMs = TypefluxOfficialASRUsageMeter.audioDurationMilliseconds(
-            pcm16ByteCount: pcm16ByteCount
-        )
-        let routingClient = routingClient
-        Task.detached(priority: .utility) {
-            do {
-                try await routingClient.reportAliyunUsage(
-                    accessToken: accessToken,
-                    usageReportID: usageReportID,
-                    audioDurationMs: audioDurationMs,
-                    outputChars: outputChars,
-                    scenario: scenario
-                )
-            } catch {
-                NetworkDebugLogger.logError(context: "Aliyun direct ASR usage report failed", error: error)
-            }
-        }
     }
 }
 
@@ -377,92 +299,6 @@ struct DefaultTypefluxOfficialASRTransport: TypefluxOfficialASRTransport {
         )
     }
 
-    func transcribeViaDirectAliyun(
-        pcmData: Data,
-        token: String,
-        model: String,
-        onUpdate: @escaping @Sendable (TranscriptionSnapshot) async -> Void
-    ) async throws -> String {
-        try await AliCloudFunASRSession.run(
-            pcmData: pcmData,
-            model: model,
-            apiKey: token,
-            onUpdate: onUpdate
-        )
-    }
-
-    func makeDirectAliyunPCMStream(
-        token: String,
-        model: String,
-        onUpdate: @escaping @Sendable (TranscriptionSnapshot) async -> Void
-    ) -> any PCM16RealtimeTranscriptionSession {
-        AliCloudFunASRSession(model: model, apiKey: token, onUpdate: onUpdate)
-    }
-}
-
-actor TypefluxOfficialAliyunUsageReportingPCMStream: PCM16RealtimeTranscriptionSession {
-    private let upstream: any PCM16RealtimeTranscriptionSession
-    private let accessToken: String
-    private let usageReportID: String
-    private let scenario: TypefluxCloudScenario
-    private let routingClient: any TypefluxOfficialASRRoutingClient
-    private var userAudioByteCount = 0
-
-    init(
-        upstream: any PCM16RealtimeTranscriptionSession,
-        accessToken: String,
-        usageReportID: String,
-        scenario: TypefluxCloudScenario,
-        routingClient: any TypefluxOfficialASRRoutingClient
-    ) {
-        self.upstream = upstream
-        self.accessToken = accessToken
-        self.usageReportID = usageReportID
-        self.scenario = scenario
-        self.routingClient = routingClient
-    }
-
-    func start() async throws {
-        try await upstream.start()
-    }
-
-    func appendPCM16(_ data: Data) async throws {
-        try await upstream.appendPCM16(data)
-        userAudioByteCount += data.count
-    }
-
-    func finish() async throws -> String {
-        let transcript = try await upstream.finish()
-        reportUsage(outputChars: transcript.count)
-        return transcript
-    }
-
-    func cancel() async {
-        await upstream.cancel()
-    }
-
-    private func reportUsage(outputChars: Int) {
-        let audioDurationMs = TypefluxOfficialASRUsageMeter.audioDurationMilliseconds(
-            pcm16ByteCount: userAudioByteCount
-        )
-        let routingClient = routingClient
-        let accessToken = accessToken
-        let usageReportID = usageReportID
-        let scenario = scenario
-        Task.detached(priority: .utility) {
-            do {
-                try await routingClient.reportAliyunUsage(
-                    accessToken: accessToken,
-                    usageReportID: usageReportID,
-                    audioDurationMs: audioDurationMs,
-                    outputChars: outputChars,
-                    scenario: scenario
-                )
-            } catch {
-                NetworkDebugLogger.logError(context: "Aliyun realtime direct ASR usage report failed", error: error)
-            }
-        }
-    }
 }
 
 // MARK: - Errors
@@ -584,14 +420,20 @@ enum TypefluxOfficialASRRequestFactory {
         provider: String = "default",
         personaID: UUID? = nil
     ) throws -> URLRequest {
-        let wsScheme = apiBaseURL.hasPrefix("https") ? "wss" : "ws"
-        let host = apiBaseURL
-            .replacingOccurrences(of: "https://", with: "")
-            .replacingOccurrences(of: "http://", with: "")
-        let urlString = "\(wsScheme)://\(host)/api/v1/asr/ws/\(provider)"
+        guard var components = URLComponents(string: apiBaseURL),
+              let scheme = components.scheme?.lowercased(),
+              scheme == "http" || scheme == "https",
+              components.host?.isEmpty == false
+        else {
+            throw TypefluxOfficialASRError.connectionFailed("Invalid WebSocket server URL: \(apiBaseURL)")
+        }
+        components.scheme = scheme == "https" ? "wss" : "ws"
+        components.path = "/api/v1/asr/ws/\(provider)"
+        components.query = nil
+        components.fragment = nil
 
-        guard let url = URL(string: urlString) else {
-            throw TypefluxOfficialASRError.connectionFailed("Invalid WebSocket URL: \(urlString)")
+        guard let url = components.url else {
+            throw TypefluxOfficialASRError.connectionFailed("Invalid WebSocket server URL: \(apiBaseURL)")
         }
 
         var request = URLRequest(url: url)

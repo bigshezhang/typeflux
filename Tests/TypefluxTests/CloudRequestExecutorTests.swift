@@ -111,8 +111,8 @@ final class CloudRequestExecutorTests: XCTestCase {
         let executor = CloudRequestExecutor(selector: selector, session: session)
 
         do {
-            _ = try await executor.execute(apiPath: "/api/v1/asr/aliyun/token") { base in
-                URLRequest(url: base.appendingPathComponent("api/v1/asr/aliyun/token"))
+            _ = try await executor.execute(apiPath: "/api/v1/asr/token") { base in
+                URLRequest(url: base.appendingPathComponent("api/v1/asr/token"))
             }
             XCTFail("Expected billing error")
         } catch let error as TypefluxCloudBillingError {
@@ -204,8 +204,8 @@ final class CloudRequestExecutorTests: XCTestCase {
         await selector.reportSuccess(urlB, latencyMs: 50)
 
         let executor = CloudRequestExecutor(selector: selector, session: session)
-        _ = try await executor.execute(apiPath: "/api/v1/asr/aliyun/token") { base in
-            URLRequest(url: base.appendingPathComponent("api/v1/asr/aliyun/token"))
+        _ = try await executor.execute(apiPath: "/api/v1/asr/token") { base in
+            URLRequest(url: base.appendingPathComponent("api/v1/asr/token"))
         }
 
         let calls = await session.callOrder
