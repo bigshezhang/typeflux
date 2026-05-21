@@ -120,7 +120,7 @@ final class TypefluxOfficialTranscriberRoutingTests: XCTestCase {
     func testWebSocketRouteUsesTemporaryTokenAndReturnedASRServer() async throws {
         let asrServer = URL(string: "https://asr-1.example.com")!
         let routing = MockTypefluxRoutingClient(route: .webSocket(
-            token: "asr-temp",
+            token: try makeUnsignedJWT(payload: ["asr_provider": "doubao"]),
             tokenType: "Bearer",
             expiresAt: 1_893_456_000,
             expiresInSeconds: 300,
@@ -149,7 +149,8 @@ final class TypefluxOfficialTranscriberRoutingTests: XCTestCase {
         XCTAssertEqual(result.transcript, "raw")
         XCTAssertEqual(result.rewritten, "rewritten")
         XCTAssertEqual(transport.webSocketLLMCallCount, 1)
-        XCTAssertEqual(transport.lastWebSocketToken, "asr-temp")
+        XCTAssertEqual(TypefluxOfficialASRTokenScope.provider(from: transport.lastWebSocketToken ?? ""), "doubao")
+        XCTAssertEqual(transport.lastWebSocketProvider, "doubao")
         XCTAssertEqual(transport.lastWebSocketBaseURL, "https://asr-1.example.com")
         let preferredServers = await serverRegistry.lastPreferredServers()
         XCTAssertEqual(preferredServers, [asrServer])
@@ -299,17 +300,20 @@ private final class MockTypefluxTransport: TypefluxOfficialASRTransport, @unchec
     var webSocketLLMCallCount = 0
     var lastWebSocketBaseURL: String?
     var lastWebSocketToken: String?
+    var lastWebSocketProvider: String?
 
     func transcribeViaWebSocket(
         pcmData _: Data,
         apiBaseURL: String,
         token: String,
+        provider: String,
         scenario _: TypefluxCloudScenario,
         onUpdate _: @escaping @Sendable (TranscriptionSnapshot) async -> Void
     ) async throws -> String {
         webSocketCallCount += 1
         lastWebSocketBaseURL = apiBaseURL
         lastWebSocketToken = token
+        lastWebSocketProvider = provider
         return webSocketTranscript
     }
 
@@ -317,6 +321,7 @@ private final class MockTypefluxTransport: TypefluxOfficialASRTransport, @unchec
         pcmData _: Data,
         apiBaseURL: String,
         token: String,
+        provider: String,
         scenario _: TypefluxCloudScenario,
         llmConfig _: ASRLLMConfig,
         onASRUpdate _: @escaping @Sendable (TranscriptionSnapshot) async -> Void,
@@ -326,6 +331,20 @@ private final class MockTypefluxTransport: TypefluxOfficialASRTransport, @unchec
         webSocketLLMCallCount += 1
         lastWebSocketBaseURL = apiBaseURL
         lastWebSocketToken = token
+        lastWebSocketProvider = provider
         return webSocketLLMResult
     }
+}
+
+private func makeUnsignedJWT(payload: [String: String]) throws -> String {
+    let header = base64URLEncoded(Data(#"{"alg":"none"}"#.utf8))
+    let payloadData = try JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys])
+    return "\(header).\(base64URLEncoded(payloadData))."
+}
+
+private func base64URLEncoded(_ data: Data) -> String {
+    data.base64EncodedString()
+        .replacingOccurrences(of: "+", with: "-")
+        .replacingOccurrences(of: "/", with: "_")
+        .replacingOccurrences(of: "=", with: "")
 }

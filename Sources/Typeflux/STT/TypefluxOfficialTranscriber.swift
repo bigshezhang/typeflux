@@ -46,6 +46,7 @@ protocol TypefluxOfficialASRTransport: Sendable {
         pcmData: Data,
         apiBaseURL: String,
         token: String,
+        provider: String,
         scenario: TypefluxCloudScenario,
         onUpdate: @escaping @Sendable (TranscriptionSnapshot) async -> Void
     ) async throws -> String
@@ -54,6 +55,7 @@ protocol TypefluxOfficialASRTransport: Sendable {
         pcmData: Data,
         apiBaseURL: String,
         token: String,
+        provider: String,
         scenario: TypefluxCloudScenario,
         llmConfig: ASRLLMConfig,
         onASRUpdate: @escaping @Sendable (TranscriptionSnapshot) async -> Void,
@@ -98,10 +100,12 @@ final class TypefluxOfficialTranscriber: TypefluxCloudScenarioAwareTranscriber, 
         let pcmData = try CloudASRAudioConverter.convert(url: audioFile.fileURL)
         let route = try await routingClient.fetchRoute(accessToken: token, scenario: scenario)
         let asrToken: String
+        let asrProvider: String
         let serverBaseURLs: [URL]
         switch route {
         case let .webSocket(token, _, _, _, servers):
             asrToken = token
+            asrProvider = TypefluxOfficialASRTokenScope.provider(from: token) ?? "default"
             serverBaseURLs = servers
         }
 
@@ -113,6 +117,7 @@ final class TypefluxOfficialTranscriber: TypefluxCloudScenarioAwareTranscriber, 
                 pcmData: pcmData,
                 apiBaseURL: apiBaseURL,
                 token: asrToken,
+                provider: asrProvider,
                 scenario: scenario,
                 onUpdate: onUpdate
             )
@@ -135,10 +140,12 @@ final class TypefluxOfficialTranscriber: TypefluxCloudScenarioAwareTranscriber, 
         let pcmData = try CloudASRAudioConverter.convert(url: audioFile.fileURL)
         let route = try await routingClient.fetchRoute(accessToken: token, scenario: scenario)
         let asrToken: String
+        let asrProvider: String
         let serverBaseURLs: [URL]
         switch route {
         case let .webSocket(token, _, _, _, servers):
             asrToken = token
+            asrProvider = TypefluxOfficialASRTokenScope.provider(from: token) ?? "default"
             serverBaseURLs = servers
         }
 
@@ -150,6 +157,7 @@ final class TypefluxOfficialTranscriber: TypefluxCloudScenarioAwareTranscriber, 
                 pcmData: pcmData,
                 apiBaseURL: apiBaseURL,
                 token: asrToken,
+                provider: asrProvider,
                 scenario: scenario,
                 llmConfig: llmConfig,
                 onASRUpdate: onASRUpdate,
@@ -173,10 +181,12 @@ final class TypefluxOfficialTranscriber: TypefluxCloudScenarioAwareTranscriber, 
 
                 let route = try await routingClient.fetchRoute(accessToken: token, scenario: scenario)
                 let asrToken: String
+                let asrProvider: String
                 let serverBaseURLs: [URL]
                 switch route {
                 case let .webSocket(token, _, _, _, servers):
                     asrToken = token
+                    asrProvider = TypefluxOfficialASRTokenScope.provider(from: token) ?? "default"
                     serverBaseURLs = servers
                 }
 
@@ -188,6 +198,7 @@ final class TypefluxOfficialTranscriber: TypefluxCloudScenarioAwareTranscriber, 
                 return TypefluxOfficialRealtimePCMStream(
                     apiBaseURL: baseURL.absoluteString,
                     token: asrToken,
+                    provider: asrProvider,
                     scenario: scenario,
                     onUpdate: onUpdate
                 )
@@ -205,10 +216,12 @@ final class TypefluxOfficialTranscriber: TypefluxCloudScenarioAwareTranscriber, 
         let routingClient = TypefluxOfficialASRRoutingHTTPClient()
         let route = try await routingClient.fetchRoute(accessToken: token, scenario: .modelSetup)
         let asrToken: String
+        let asrProvider: String
         let serverBaseURLs: [URL]
         switch route {
         case let .webSocket(token, _, _, _, servers):
             asrToken = token
+            asrProvider = TypefluxOfficialASRTokenScope.provider(from: token) ?? "default"
             serverBaseURLs = servers
         }
 
@@ -217,7 +230,8 @@ final class TypefluxOfficialTranscriber: TypefluxCloudScenarioAwareTranscriber, 
                 pcmData: pcmData,
                 apiBaseURL: apiBaseURL,
                 token: asrToken,
-                scenario: .modelSetup
+                scenario: .modelSetup,
+                provider: asrProvider
             ) { _ in }
         }
     }
@@ -265,6 +279,7 @@ struct DefaultTypefluxOfficialASRTransport: TypefluxOfficialASRTransport {
         pcmData: Data,
         apiBaseURL: String,
         token: String,
+        provider: String,
         scenario: TypefluxCloudScenario,
         onUpdate: @escaping @Sendable (TranscriptionSnapshot) async -> Void
     ) async throws -> String {
@@ -273,6 +288,7 @@ struct DefaultTypefluxOfficialASRTransport: TypefluxOfficialASRTransport {
             apiBaseURL: apiBaseURL,
             token: token,
             scenario: scenario,
+            provider: provider,
             onUpdate: onUpdate
         )
     }
@@ -281,6 +297,7 @@ struct DefaultTypefluxOfficialASRTransport: TypefluxOfficialASRTransport {
         pcmData: Data,
         apiBaseURL: String,
         token: String,
+        provider: String,
         scenario: TypefluxCloudScenario,
         llmConfig: ASRLLMConfig,
         onASRUpdate: @escaping @Sendable (TranscriptionSnapshot) async -> Void,
@@ -292,6 +309,7 @@ struct DefaultTypefluxOfficialASRTransport: TypefluxOfficialASRTransport {
             apiBaseURL: apiBaseURL,
             token: token,
             scenario: scenario,
+            provider: provider,
             llmConfig: llmConfig,
             onASRUpdate: onASRUpdate,
             onLLMStart: onLLMStart,
@@ -329,6 +347,13 @@ enum TypefluxOfficialASRClosePolicy {
         finalSegments: [String]
     ) -> Bool {
         !completed && finalSegments.isEmpty
+    }
+
+    static func isNormalProviderCompletion(_ message: String) -> Bool {
+        let lowercased = message.lowercased()
+        return lowercased.contains("close 1000")
+            && lowercased.contains("normal")
+            && lowercased.contains("finish last sequence")
     }
 }
 
@@ -444,6 +469,46 @@ enum TypefluxOfficialASRRequestFactory {
     }
 }
 
+enum TypefluxOfficialASRTokenScope {
+    static func provider(from token: String) -> String? {
+        let parts = token.split(separator: ".", omittingEmptySubsequences: false)
+        guard parts.count >= 2 else { return nil }
+
+        var payload = String(parts[1])
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        let padding = payload.count % 4
+        if padding > 0 {
+            payload += String(repeating: "=", count: 4 - padding)
+        }
+
+        guard let data = Data(base64Encoded: payload),
+              let claims = try? JSONDecoder().decode(Claims.self, from: data)
+        else {
+            return nil
+        }
+
+        let provider = claims.asrProvider.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard allowedProviders.contains(provider) else { return nil }
+        return provider
+    }
+
+    private static let allowedProviders: Set<String> = ["aliyun", "doubao", "google"]
+
+    private struct Claims: Decodable {
+        let asrProvider: String
+
+        enum CodingKeys: String, CodingKey {
+            case asrProvider = "asr_provider"
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            asrProvider = try container.decodeIfPresent(String.self, forKey: .asrProvider) ?? ""
+        }
+    }
+}
+
 // MARK: - WebSocket ASR Session
 
 private actor TypefluxOfficialASRSession {
@@ -476,6 +541,7 @@ private actor TypefluxOfficialASRSession {
         apiBaseURL: String,
         token: String,
         scenario: TypefluxCloudScenario,
+        provider: String = "default",
         llmConfig: ASRLLMConfig,
         onASRUpdate: @escaping @Sendable (TranscriptionSnapshot) async -> Void,
         onLLMStart: @escaping @Sendable () async -> Void,
@@ -486,7 +552,7 @@ private actor TypefluxOfficialASRSession {
             apiBaseURL: apiBaseURL,
             token: token,
             scenario: scenario,
-            provider: "default",
+            provider: provider,
             personaID: llmConfig.personaID,
             onASRUpdate: onASRUpdate,
             llmConfig: llmConfig,
@@ -690,6 +756,10 @@ private actor TypefluxOfficialASRSession {
 
         case "error":
             let errorText = json["error"] as? String ?? "Unknown error"
+            if TypefluxOfficialASRClosePolicy.isNormalProviderCompletion(errorText) {
+                completed = true
+                return
+            }
             logger.error("ASR server error: \(errorText)")
             sessionError = TypefluxCloudBillingError.fromMessage(errorText)
                 ?? TypefluxOfficialASRError.serverError(errorText)
@@ -712,6 +782,7 @@ private actor TypefluxOfficialASRSession {
 private actor TypefluxOfficialRealtimePCMStream: PCM16RealtimeTranscriptionSession {
     private let apiBaseURL: String
     private let token: String
+    private let provider: String
     private let scenario: TypefluxCloudScenario
     private let onUpdate: @Sendable (TranscriptionSnapshot) async -> Void
     private let logger = Logger(subsystem: "ai.gulu.app.typeflux", category: "TypefluxOfficialRealtimePCMStream")
@@ -727,11 +798,13 @@ private actor TypefluxOfficialRealtimePCMStream: PCM16RealtimeTranscriptionSessi
     init(
         apiBaseURL: String,
         token: String,
+        provider: String = "default",
         scenario: TypefluxCloudScenario,
         onUpdate: @escaping @Sendable (TranscriptionSnapshot) async -> Void
     ) {
         self.apiBaseURL = apiBaseURL
         self.token = token
+        self.provider = provider
         self.scenario = scenario
         self.onUpdate = onUpdate
     }
@@ -740,7 +813,8 @@ private actor TypefluxOfficialRealtimePCMStream: PCM16RealtimeTranscriptionSessi
         let request = try TypefluxOfficialASRRequestFactory.makeWebSocketRequest(
             apiBaseURL: apiBaseURL,
             token: token,
-            scenario: scenario
+            scenario: scenario,
+            provider: provider
         )
         let session = URLSession(configuration: .default)
         let socketTask = session.webSocketTask(with: request)
@@ -854,6 +928,10 @@ private actor TypefluxOfficialRealtimePCMStream: PCM16RealtimeTranscriptionSessi
             }
         case "error":
             let errorText = json["error"] as? String ?? "Unknown error"
+            if TypefluxOfficialASRClosePolicy.isNormalProviderCompletion(errorText) {
+                completed = true
+                return
+            }
             logger.error("ASR server error: \(errorText)")
             sessionError = TypefluxCloudBillingError.fromMessage(errorText)
                 ?? TypefluxOfficialASRError.serverError(errorText)
