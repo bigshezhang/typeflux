@@ -728,15 +728,23 @@ extension WorkflowController {
             )
 
             try ensureProcessingIsActive(sessionID)
-            let normalizedRawTranscript = rawTranscribedText.trimmingCharacters(in: .whitespacesAndNewlines)
-            let transcribedText: String
-            if normalizedRawTranscript.isEmpty, !fallbackPreviewText.isEmpty {
-                transcribedText = fallbackPreviewText
+            let transcriptChoice = Self.preferredTranscript(
+                rawTranscribedText: rawTranscribedText,
+                recordingPreviewText: fallbackPreviewText
+            )
+            let transcribedText = transcriptChoice.text
+            if transcriptChoice.reason == .emptyFinalUsedPreview {
                 NetworkDebugLogger.logMessage(
                     "[Transcription] using recording preview text because final transcription was empty"
                 )
-            } else {
-                transcribedText = rawTranscribedText
+            } else if transcriptChoice.reason == .finalWasPreviewSuffix {
+                NetworkDebugLogger.logMessage(
+                    """
+                    [Transcription] using recording preview text because realtime final appears truncated
+                    finalLength: \(rawTranscribedText.trimmingCharacters(in: .whitespacesAndNewlines).count)
+                    previewLength: \(fallbackPreviewText.count)
+                    """
+                )
             }
             pipelineTiming.transcriptionCompletedAt = Date()
             record.pipelineTiming = pipelineTiming
@@ -961,6 +969,34 @@ extension WorkflowController {
                 }
             }
         }
+    }
+
+    static func preferredTranscript(
+        rawTranscribedText: String,
+        recordingPreviewText: String
+    ) -> (text: String, reason: TranscriptChoiceReason) {
+        let normalizedRawTranscript = rawTranscribedText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let fallbackPreviewText = recordingPreviewText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !fallbackPreviewText.isEmpty else {
+            return (rawTranscribedText, .raw)
+        }
+        guard !normalizedRawTranscript.isEmpty else {
+            return (fallbackPreviewText, .emptyFinalUsedPreview)
+        }
+        guard fallbackPreviewText.count > normalizedRawTranscript.count,
+              fallbackPreviewText.hasSuffix(normalizedRawTranscript)
+        else {
+            return (rawTranscribedText, .raw)
+        }
+
+        return (fallbackPreviewText, .finalWasPreviewSuffix)
+    }
+
+    enum TranscriptChoiceReason: Equatable {
+        case raw
+        case emptyFinalUsedPreview
+        case finalWasPreviewSuffix
     }
 
     private func processAskFlowWithSelection(

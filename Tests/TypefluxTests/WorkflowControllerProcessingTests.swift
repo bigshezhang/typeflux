@@ -984,6 +984,42 @@ final class WorkflowControllerProcessingTests: XCTestCase {
         XCTAssertTrue(controller.latestRecordingPreviewText.isEmpty)
     }
 
+    func testFinishRecordingUsesPreviewTextWhenFinalTranscriptionIsPreviewSuffix() async throws {
+        let audioURL = try writeSilentTestAudio(duration: 1.0)
+        defer { try? FileManager.default.removeItem(at: audioURL) }
+
+        let textInjector = MockProcessingTextInjector()
+        let historyStore = MockProcessingHistoryStore()
+        let audioRecorder = FileReturningAudioRecorder(fileURL: audioURL)
+        let controller = makeWorkflowController(
+            textInjector: textInjector,
+            audioRecorder: audioRecorder,
+            sttTranscriber: MockProcessingTranscriber(transcript: "后半段内容。"),
+            historyStore: historyStore,
+            sleep: { _ in }
+        )
+        controller.latestRecordingPreviewText = "前半段内容，后半段内容。"
+        controller.isAudioRecorderStarted = true
+
+        await controller.finishRecordingAndProcess(recordingStoppedAt: Date())
+        await waitUntil {
+            historyStore.list().last?.transcriptText == "前半段内容，后半段内容。"
+        }
+
+        XCTAssertEqual(textInjector.insertedTexts, ["前半段内容，后半段内容"])
+        XCTAssertEqual(historyStore.list().last?.transcriptText, "前半段内容，后半段内容。")
+    }
+
+    func testPreferredTranscriptKeepsRawWhenPreviewDoesNotContainFinalAsSuffix() {
+        let choice = WorkflowController.preferredTranscript(
+            rawTranscribedText: "final transcript",
+            recordingPreviewText: "preview transcript"
+        )
+
+        XCTAssertEqual(choice.text, "final transcript")
+        XCTAssertEqual(choice.reason, .raw)
+    }
+
     func testQuickInputHoldToTalkBypassesPersonaRewriteAfterTranscription() async throws {
         let audioURL = try writeSilentTestAudio(duration: 1.0)
         defer { try? FileManager.default.removeItem(at: audioURL) }
