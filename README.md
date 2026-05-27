@@ -143,7 +143,7 @@ Join the community to share feedback, ask questions, and follow development upda
 - [X](https://x.com/mylxsw)
 - WeChat group:
 
-  <img src="./assets/wechat-group-20260513.jpg" alt="Typeflux WeChat group QR code" width="260">
+  <img src="./assets/wechat-group-20260527.jpg" alt="Typeflux WeChat group QR code" width="260">
 
 ## Contributing
 

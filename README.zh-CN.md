@@ -150,7 +150,7 @@ swift test        # 运行测试
 - [X](https://x.com/mylxsw)
 - 微信群：
 
-  <img src="./assets/wechat-group-20260513.jpg" alt="Typeflux 微信群二维码" width="260">
+  <img src="./assets/wechat-group-20260527.jpg" alt="Typeflux 微信群二维码" width="260">
 
 ## 贡献
 
