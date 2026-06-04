@@ -984,6 +984,40 @@ final class WorkflowControllerProcessingTests: XCTestCase {
         XCTAssertTrue(controller.latestRecordingPreviewText.isEmpty)
     }
 
+    func testFinishRecordingUsesPreviewTextWhenFinalTranscriptionReportsNoSpeech() async throws {
+        let audioURL = try writeSilentTestAudio(duration: 1.0)
+        defer { try? FileManager.default.removeItem(at: audioURL) }
+
+        let textInjector = MockProcessingTextInjector()
+        let historyStore = MockProcessingHistoryStore()
+        let audioRecorder = FileReturningAudioRecorder(fileURL: audioURL)
+        let noSpeechError = NSError(
+            domain: "STT",
+            code: 204,
+            userInfo: [NSLocalizedDescriptionKey: "No speech detected in audio."]
+        )
+        let controller = makeWorkflowController(
+            textInjector: textInjector,
+            audioRecorder: audioRecorder,
+            sttTranscriber: MockProcessingTranscriber(error: noSpeechError),
+            historyStore: historyStore,
+            sleep: { _ in }
+        )
+        controller.latestRecordingPreviewText = "preview transcript"
+        controller.isAudioRecorderStarted = true
+
+        await controller.finishRecordingAndProcess(recordingStoppedAt: Date())
+        await waitUntil {
+            textInjector.insertedTexts == ["preview transcript"]
+        }
+
+        XCTAssertEqual(audioRecorder.stopCallCount, 1)
+        XCTAssertEqual(textInjector.insertedTexts, ["preview transcript"])
+        XCTAssertEqual(historyStore.list().last?.transcriptText, "preview transcript")
+        XCTAssertTrue(controller.latestRecordingPreviewText.isEmpty)
+        XCTAssertNil(controller.lastRetryableFailureRecord)
+    }
+
     func testFinishRecordingUsesPreviewTextWhenFinalTranscriptionIsPreviewSuffix() async throws {
         let audioURL = try writeSilentTestAudio(duration: 1.0)
         defer { try? FileManager.default.removeItem(at: audioURL) }
@@ -2013,13 +2047,18 @@ private final class MockWorkflowLocalModelManager: LocalSTTModelManaging {
 
 private final class MockProcessingTranscriber: Transcriber {
     private let transcript: String
+    private let error: Error?
 
-    init(transcript: String = "") {
+    init(transcript: String = "", error: Error? = nil) {
         self.transcript = transcript
+        self.error = error
     }
 
     func transcribe(audioFile _: AudioFile) async throws -> String {
-        transcript
+        if let error {
+            throw error
+        }
+        return transcript
     }
 }
 

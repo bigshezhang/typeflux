@@ -695,14 +695,23 @@ extension WorkflowController {
                 do {
                     rawTranscribedText = try await realtimeTranscriptionSession.finish()
                 } catch {
-                    NetworkDebugLogger.logError(
-                        context: "Realtime STT session failed; falling back to recorded audio",
-                        error: error
-                    )
-                    rawTranscribedText = try await sttRouter.transcribeStream(
-                        audioFile: audioFile,
-                        scenario: cloudScenario
-                    ) { _ in }
+                    if Self.shouldUseRecordingPreviewOnTranscriptionFailure(error),
+                       !fallbackPreviewText.isEmpty {
+                        NetworkDebugLogger.logError(
+                            context: "Realtime STT session failed; using recording preview text",
+                            error: error
+                        )
+                        rawTranscribedText = ""
+                    } else {
+                        NetworkDebugLogger.logError(
+                            context: "Realtime STT session failed; falling back to recorded audio",
+                            error: error
+                        )
+                        rawTranscribedText = try await sttRouter.transcribeStream(
+                            audioFile: audioFile,
+                            scenario: cloudScenario
+                        ) { _ in }
+                    }
                 }
             } else if canMergeWithLLM,
                       let resolvedPersonaPrompt = personaPrompt?.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -718,10 +727,23 @@ extension WorkflowController {
                 rawTranscribedText = mergedResult.transcript
                 mergedLLMResult = mergedResult.rewritten
             } else {
-                rawTranscribedText = try await sttRouter.transcribeStream(
-                    audioFile: audioFile,
-                    scenario: cloudScenario
-                ) { _ in }
+                do {
+                    rawTranscribedText = try await sttRouter.transcribeStream(
+                        audioFile: audioFile,
+                        scenario: cloudScenario
+                    ) { _ in }
+                } catch {
+                    guard Self.shouldUseRecordingPreviewOnTranscriptionFailure(error),
+                          !fallbackPreviewText.isEmpty
+                    else {
+                        throw error
+                    }
+                    NetworkDebugLogger.logError(
+                        context: "Final STT failed; using recording preview text",
+                        error: error
+                    )
+                    rawTranscribedText = ""
+                }
             }
             NetworkDebugLogger.logMessage(
                 "[Ask Timing] transcription completed in \(Self.formatDurationSince(transcriptionStartedAt))"
@@ -997,6 +1019,19 @@ extension WorkflowController {
         case raw
         case emptyFinalUsedPreview
         case finalWasPreviewSuffix
+    }
+
+    static func shouldUseRecordingPreviewOnTranscriptionFailure(_ error: Error) -> Bool {
+        let message = error.localizedDescription.lowercased()
+        return message.contains("no speech")
+            || message.contains("no transcription")
+            || message.contains("empty transcript")
+            || message.contains("empty transcription")
+            || message.contains("silent audio")
+            || message.contains("silence")
+            || message.contains("socket is not connected")
+            || message.contains("socket was not connected")
+            || message.contains("not connected")
     }
 
     private func processAskFlowWithSelection(
