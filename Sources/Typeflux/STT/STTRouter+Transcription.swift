@@ -15,7 +15,7 @@ extension STTRouter {
         onUpdate: @escaping @Sendable (TranscriptionSnapshot) async -> Void
     ) async throws -> String {
         switch settingsStore.sttProvider {
-        case .freeModel, .whisperAPI, .aliCloud, .doubaoRealtime, .googleCloud:
+        case .freeModel, .whisperAPI, .aliCloud, .doubaoRealtime, .googleCloud, .soniox:
             try await transcribeWithRemoteProvider(
                 route: remoteSTTRoute(for: settingsStore.sttProvider),
                 audioFile: audioFile,
@@ -199,6 +199,14 @@ extension STTRouter {
                 failureContext: "Google Cloud Speech-to-Text failed",
                 autoModelSuccessMessage: "Auto local model succeeded after Google Cloud STT failure",
                 appleFallbackMessage: "Falling back to Apple Speech after Google Cloud STT failure"
+            )
+        case .soniox:
+            return RemoteSTTRoute(
+                provider: soniox,
+                operationName: "Soniox STT request",
+                failureContext: "Soniox ASR failed",
+                autoModelSuccessMessage: "Auto local model succeeded after Soniox ASR failure",
+                appleFallbackMessage: "Falling back to Apple Speech after Soniox ASR failure"
             )
         default:
             assertionFailure("Unexpected non-remote STT provider")

@@ -24,7 +24,7 @@ extension WorkflowController {
 
     var shouldSuppressPostRecordingStreamingPreviewForCurrentSTTProvider: Bool {
         switch settingsStore.sttProvider {
-        case .aliCloud, .doubaoRealtime, .googleCloud, .typefluxOfficial:
+        case .aliCloud, .doubaoRealtime, .googleCloud, .soniox, .typefluxOfficial:
             true
         default:
             false

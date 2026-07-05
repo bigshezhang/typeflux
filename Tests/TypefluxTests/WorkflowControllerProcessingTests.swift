@@ -1344,6 +1344,7 @@ final class WorkflowControllerProcessingTests: XCTestCase {
                 doubaoRealtime: sttTranscriber,
                 googleCloud: sttTranscriber,
                 groq: sttTranscriber,
+                soniox: sttTranscriber,
                 typefluxOfficial: sttTranscriber
             ),
             llmService: llmService,

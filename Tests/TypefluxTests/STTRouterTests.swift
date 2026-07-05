@@ -189,6 +189,7 @@ final class STTRouterTests: XCTestCase {
             doubaoRealtime: doubaoRealtimeOverride ?? doubaoRealtime,
             googleCloud: googleCloud,
             groq: groq,
+            soniox: MockSTTTranscriber(),
             typefluxOfficial: typefluxOfficialOverride ?? typefluxOfficial,
             typefluxCloudLoginFallbackLocalModel: typefluxCloudLoginFallbackLocalModel,
             isTypefluxCloudLoggedIn: isTypefluxCloudLoggedIn,
@@ -638,6 +639,7 @@ final class STTRouterTests: XCTestCase {
             doubaoRealtime: doubaoRealtime,
             googleCloud: googleCloud,
             groq: groq,
+            soniox: MockSTTTranscriber(),
             typefluxOfficial: scenarioAware
         )
 

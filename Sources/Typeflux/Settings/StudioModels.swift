@@ -169,6 +169,7 @@ enum StudioModelProviderID: String, CaseIterable, Identifiable {
     case doubaoRealtime
     case googleCloud
     case groqSTT
+    case soniox
     case typefluxOfficial
     case typefluxCloud
     case ollama
@@ -196,7 +197,7 @@ enum StudioModelProviderID: String, CaseIterable, Identifiable {
     var domain: StudioModelDomain {
         switch self {
         case .appleSpeech, .localSTT, .freeSTT, .whisperAPI, .multimodalLLM, .aliCloud, .doubaoRealtime,
-             .googleCloud, .groqSTT, .typefluxOfficial:
+             .googleCloud, .groqSTT, .soniox, .typefluxOfficial:
             .stt
         case .typefluxCloud, .ollama, .freeModel, .customLLM, .openRouter, .openAI, .anthropic, .gemini, .deepSeek,
              .kimi, .qwen, .zhipu, .minimax, .grok, .xiaomi, .groq, .openCodeZen, .openCodeGo:

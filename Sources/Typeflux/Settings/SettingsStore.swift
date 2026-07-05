@@ -329,6 +329,27 @@ final class SettingsStore {
         set { defaults.set(newValue, forKey: "stt.groq.model") }
     }
 
+    var sonioxAPIKey: String {
+        get { defaults.string(forKey: "stt.soniox.apiKey") ?? "" }
+        set { defaults.set(newValue, forKey: "stt.soniox.apiKey") }
+    }
+
+    var sonioxModel: String {
+        get {
+            let stored = defaults.string(forKey: "stt.soniox.model")?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return stored.isEmpty ? SonioxASRDefaults.model : stored
+        }
+        set {
+            let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.isEmpty {
+                defaults.removeObject(forKey: "stt.soniox.model")
+            } else {
+                defaults.set(trimmed, forKey: "stt.soniox.model")
+            }
+        }
+    }
+
     var multimodalLLMModel: String {
         get { defaults.string(forKey: "stt.multimodal.model") ?? "" }
         set { defaults.set(newValue, forKey: "stt.multimodal.model") }

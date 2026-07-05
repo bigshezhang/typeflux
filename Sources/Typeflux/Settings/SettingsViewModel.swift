@@ -137,6 +137,8 @@ final class StudioViewModel: ObservableObject {
     @Published private(set) var isAuthorizingGoogleCloudOAuth = false
     @Published var groqSTTAPIKey: String
     @Published var groqSTTModel: String
+    @Published var sonioxAPIKey: String
+    @Published var sonioxModel: String
 
     @Published var localSTTModel: LocalSTTModel
     @Published var localSTTFocusedModel: LocalSTTModel
@@ -309,6 +311,8 @@ final class StudioViewModel: ObservableObject {
             focusedModelProvider = .googleCloud
         case .groq:
             focusedModelProvider = .groqSTT
+        case .soniox:
+            focusedModelProvider = .soniox
         case .typefluxOfficial:
             focusedModelProvider = .typefluxOfficial
         }
@@ -341,6 +345,8 @@ final class StudioViewModel: ObservableObject {
         googleCloudOAuthAuthorized = GoogleCloudSpeechCredentialResolver.isStoredAuthorizationAvailable()
         groqSTTAPIKey = settingsStore.groqSTTAPIKey
         groqSTTModel = settingsStore.groqSTTModel
+        sonioxAPIKey = settingsStore.sonioxAPIKey
+        sonioxModel = settingsStore.sonioxModel
         localSTTModel = settingsStore.localSTTModel
         localSTTFocusedModel = settingsStore.localSTTModel
         localSTTModelIdentifier = settingsStore.localSTTModelIdentifier
@@ -779,7 +785,7 @@ final class StudioViewModel: ObservableObject {
             case .appleSpeech, .localModel:
                 "Local Processing"
             case .freeModel, .whisperAPI, .multimodalLLM, .aliCloud, .doubaoRealtime, .googleCloud, .groq,
-                 .typefluxOfficial:
+                 .soniox, .typefluxOfficial:
                 "Remote API"
             }
         case .llm:
@@ -809,6 +815,8 @@ final class StudioViewModel: ObservableObject {
                 "Streaming audio directly to Google Cloud Speech-to-Text over gRPC."
             case .groq:
                 "Streaming audio to Groq for ultra-fast Whisper transcription."
+            case .soniox:
+                "Streaming audio to Soniox for real-time speech recognition."
             case .typefluxOfficial:
                 "Using Typeflux's built-in speech recognition service."
             }
@@ -1005,6 +1013,8 @@ final class StudioViewModel: ObservableObject {
             focusedModelProvider = .googleCloud
         case .groq:
             focusedModelProvider = .groqSTT
+        case .soniox:
+            focusedModelProvider = .soniox
         case .typefluxOfficial:
             focusedModelProvider = .typefluxOfficial
         }
@@ -1298,6 +1308,14 @@ final class StudioViewModel: ObservableObject {
 
     func setGroqSTTModel(_ value: String) {
         groqSTTModel = value; sttConnectionTestState = .idle
+    }
+
+    func setSonioxAPIKey(_ value: String) {
+        sonioxAPIKey = value; sttConnectionTestState = .idle
+    }
+
+    func setSonioxModel(_ value: String) {
+        sonioxModel = value; sttConnectionTestState = .idle
     }
 
     func setLocalSTTModelIdentifier(_ value: String) {
@@ -2394,6 +2412,9 @@ final class StudioViewModel: ObservableObject {
         case .groqSTT:
             settingsStore.groqSTTAPIKey = groqSTTAPIKey
             settingsStore.groqSTTModel = groqSTTModel
+        case .soniox:
+            settingsStore.sonioxAPIKey = sonioxAPIKey
+            settingsStore.sonioxModel = sonioxModel
         case .appleSpeech, .localSTT, .typefluxOfficial, .typefluxCloud:
             break
         }
@@ -2522,7 +2543,7 @@ final class StudioViewModel: ObservableObject {
                             if payload.done || collected.count >= 60 { break }
                         }
                     case .appleSpeech, .localSTT, .whisperAPI, .multimodalLLM, .aliCloud, .doubaoRealtime,
-                         .googleCloud, .groqSTT, .typefluxOfficial:
+                         .googleCloud, .groqSTT, .soniox, .typefluxOfficial:
                         return (firstTokenDate, collected)
                     }
 
@@ -2568,6 +2589,8 @@ final class StudioViewModel: ObservableObject {
         let capturedAppLanguage = appLanguage
         let capturedGroqSTTAPIKey = groqSTTAPIKey
         let capturedGroqSTTModel = groqSTTModel
+        let capturedSonioxAPIKey = sonioxAPIKey
+        let capturedSonioxModel = sonioxModel
 
         sttTestTask = Task {
             let startDate = Date()
@@ -2613,6 +2636,11 @@ final class StudioViewModel: ObservableObject {
                             model: capturedGroqSTTModel.isEmpty
                                 ? OpenAIAudioModelCatalog.groqWhisperModels[0] : capturedGroqSTTModel,
                             apiKey: capturedGroqSTTAPIKey
+                        )
+                    case .soniox:
+                        try await SonioxTranscriber.testConnection(
+                            apiKey: capturedSonioxAPIKey,
+                            model: capturedSonioxModel
                         )
                     case .typefluxOfficial:
                         try await TypefluxOfficialTranscriber.testConnection()
@@ -2754,6 +2782,8 @@ final class StudioViewModel: ObservableObject {
                 .googleCloud
             case .groq:
                 .groqSTT
+            case .soniox:
+                .soniox
             case .typefluxOfficial:
                 .typefluxOfficial
             }

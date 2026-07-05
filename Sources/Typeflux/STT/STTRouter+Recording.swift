@@ -47,6 +47,13 @@ extension STTRouter {
                 onUpdate: onUpdate,
                 failureContext: "Google Cloud realtime session setup failed"
             )
+        case .soniox:
+            return await makeRealtimeTranscriptionSession(
+                provider: soniox,
+                scenario: scenario,
+                onUpdate: onUpdate,
+                failureContext: "Soniox realtime session setup failed"
+            )
         case .typefluxOfficial:
             return await makeRealtimeTranscriptionSession(
                 provider: typefluxOfficial,

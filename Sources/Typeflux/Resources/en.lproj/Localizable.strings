@@ -249,6 +249,7 @@
 "provider.stt.doubaoRealtime" = "Doubao Realtime ASR";
 "provider.stt.googleCloud" = "Google Speech-to-Text";
 "provider.stt.groq" = "Groq";
+"provider.stt.soniox" = "Soniox";
 "provider.stt.typefluxOfficial" = "Typeflux Cloud";
 "provider.llm.openAICompatible" = "OpenAI-Compatible";
 "provider.llm.custom" = "Custom";
@@ -638,6 +639,7 @@
 "settings.models.useAliCloud" = "Use Alibaba Cloud";
 "settings.models.useDoubao" = "Use Doubao";
 "settings.models.useGroq" = "Use Groq";
+"settings.models.useSoniox" = "Use Soniox";
 "settings.models.useTypefluxOfficial" = "Use Typeflux Official";
 "settings.models.useTypefluxCloud" = "Use Typeflux Cloud";
 "settings.models.badge.local" = "Local";
@@ -654,6 +656,7 @@
 "settings.models.card.doubao.summary" = "Low-latency streaming recognition through Doubao Speech Recognition 2.0 with ByteDance's native binary WebSocket protocol.";
 "settings.models.card.googleCloud.summary" = "Real-time streaming recognition through Google Cloud Speech-to-Text.";
 "settings.models.card.groq.summary" = "Fast Whisper transcription via Groq's inference endpoint with whisper-large-v3-turbo as the default model.";
+"settings.models.card.soniox.summary" = "Real-time streaming recognition via Soniox V5 with high accuracy across 60+ languages and low-latency WebSocket streaming.";
 "settings.models.card.typefluxOfficial.summary" = "Typeflux's built-in speech recognition service. Sign in with your Typeflux account to use it — no extra API keys required.";
 "settings.models.card.typefluxCloud.summary" = "Typeflux's built-in LLM service. Sign in with your Typeflux account to use it — no extra API keys required.";
 "settings.models.card.ollama.summary" = "Runs rewrite and edit commands locally, with optional automatic model preparation.";
@@ -711,6 +714,7 @@
 "settings.models.overview.doubao" = "Speech recognition is streamed in real time to Doubao Speech Recognition 2.0 via ByteDance WebSocket.";
 "settings.models.overview.googleCloud" = "Speech recognition is streamed in real time directly to Google Cloud Speech-to-Text.";
 "settings.models.overview.groq" = "Speech recognition is handled by Groq's fast inference endpoint using the Whisper model.";
+"settings.models.overview.soniox" = "Speech recognition is streamed in real time to Soniox V5 via WebSocket with support for 60+ languages.";
 "settings.models.overview.typefluxOfficial" = "Speech recognition is handled by Typeflux's built-in service.";
 "settings.models.overview.typefluxCloud" = "Rewriting and editing are handled by Typeflux's built-in LLM service.";
 "settings.models.mode.local" = "Local";
@@ -732,6 +736,7 @@
 "settings.models.focused.doubao" = "Use this when you want the lowest-latency cloud dictation path through Doubao Speech Recognition 2.0.";
 "settings.models.focused.googleCloud" = "Use this when you want Google Cloud Speech-to-Text with realtime streaming recognition.";
 "settings.models.focused.groq" = "Use this when you want fast cloud transcription with Groq's accelerated Whisper inference.";
+"settings.models.focused.soniox" = "Use this when you want accurate real-time cloud transcription via Soniox V5 across 60+ languages.";
 "settings.models.focused.typefluxOfficial" = "Use Typeflux's built-in speech recognition service. Just sign in — no extra configuration needed.";
 "settings.models.focused.typefluxCloud" = "Use Typeflux's built-in LLM service for rewriting and editing. Just sign in — no extra configuration needed.";
 "settings.models.routing" = "Routing behaviour";
@@ -748,6 +753,7 @@
 "settings.models.routing.doubao" = "Doubao Speech Recognition 2.0 handles real-time streaming ASR via ByteDance's binary WebSocket protocol.";
 "settings.models.routing.googleCloud" = "Google Cloud Speech-to-Text handles real-time streaming ASR directly from this Mac.";
 "settings.models.routing.groq" = "Groq handles dictation through the Whisper-compatible transcription endpoint with accelerated inference.";
+"settings.models.routing.soniox" = "Soniox V5 handles real-time streaming ASR via WebSocket with high accuracy across 60+ languages.";
 "settings.models.googleCloud.streaming" = "StreamingRecognize";
 "settings.models.googleCloud.projectID" = "Project ID";
 "settings.models.googleCloud.oauth.authorize" = "Authorize Google";
