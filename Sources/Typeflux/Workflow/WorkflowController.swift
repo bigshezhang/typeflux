@@ -6,7 +6,8 @@ import os
 final class WorkflowController {
     let logger = Logger(subsystem: "ai.gulu.app.typeflux", category: "WorkflowController")
     static let recordingTimeoutNanoseconds: UInt64 = 600_000_000_000 // 10 minutes
-    static let processingTimeoutNanoseconds: UInt64 = 120_000_000_000 // 2 minutes
+    static let minimumProcessingTimeoutSeconds: TimeInterval = 120
+    static let processingTimeoutGraceSeconds: TimeInterval = 90
     static let tapToLockThreshold: TimeInterval = 0.22
     static let minimumRecordingDuration: TimeInterval = 0.35
     static let selectionRestoreDelayMicroseconds: useconds_t = 120_000
@@ -386,7 +387,10 @@ final class WorkflowController {
         cancelCurrentProcessing(resetUI: false, reason: L("workflow.cancel.retry"))
 
         let sessionID = beginProcessingSession()
-        startProcessingTimeout(sessionID: sessionID)
+        startProcessingTimeout(
+            sessionID: sessionID,
+            recordingDurationSeconds: record.recordingDurationSeconds
+        )
         processingTask = Task { [weak self] in
             guard let self else { return }
             await MainActor.run {
@@ -468,12 +472,27 @@ final class WorkflowController {
         }
     }
 
-    func startProcessingTimeout(sessionID: UUID) {
+    static func processingTimeoutNanoseconds(recordingDurationSeconds: TimeInterval?) -> UInt64 {
+        let recordingDuration = max(0, recordingDurationSeconds ?? 0)
+        let timeoutSeconds = max(
+            minimumProcessingTimeoutSeconds,
+            recordingDuration + processingTimeoutGraceSeconds
+        )
+        return UInt64(timeoutSeconds * 1_000_000_000)
+    }
+
+    func startProcessingTimeout(
+        sessionID: UUID,
+        recordingDurationSeconds: TimeInterval? = nil
+    ) {
+        let timeoutNanoseconds = Self.processingTimeoutNanoseconds(
+            recordingDurationSeconds: recordingDurationSeconds
+        )
         processingTimeoutTask?.cancel()
         processingTimeoutTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: Self.processingTimeoutNanoseconds)
+            try? await Task.sleep(nanoseconds: timeoutNanoseconds)
             guard !Task.isCancelled else { return }
-            NSLog("[Workflow] Processing timeout after 120 seconds")
+            NSLog("[Workflow] Processing timeout after %llu seconds", timeoutNanoseconds / 1_000_000_000)
             self?.handleProcessingTimeout(sessionID: sessionID)
         }
     }

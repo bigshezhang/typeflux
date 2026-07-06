@@ -569,6 +569,24 @@ final class WorkflowControllerProcessingTests: XCTestCase {
         }
     }
 
+    func testProcessingTimeoutUsesMinimumForShortOrMissingRecordings() {
+        XCTAssertEqual(
+            WorkflowController.processingTimeoutNanoseconds(recordingDurationSeconds: nil),
+            120_000_000_000
+        )
+        XCTAssertEqual(
+            WorkflowController.processingTimeoutNanoseconds(recordingDurationSeconds: 30),
+            120_000_000_000
+        )
+    }
+
+    func testProcessingTimeoutScalesWithRecordingDuration() {
+        XCTAssertEqual(
+            WorkflowController.processingTimeoutNanoseconds(recordingDurationSeconds: 132),
+            222_000_000_000
+        )
+    }
+
     func testPersonaRewriteTimeoutAfterTranscriptionIsThirtySeconds() {
         XCTAssertEqual(WorkflowController.llmTimeoutAfterTranscriptionSeconds, 30)
     }

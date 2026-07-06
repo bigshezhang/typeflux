@@ -505,7 +505,10 @@ extension WorkflowController {
             activeProcessingRecordID = record.id
             let sessionID = beginProcessingSession()
 
-            startProcessingTimeout(sessionID: sessionID)
+            startProcessingTimeout(
+                sessionID: sessionID,
+                recordingDurationSeconds: validatedAudioFile.duration
+            )
             processingTask = Task { [weak self] in
                 guard let self else { return }
                 let processingStartedAt = Date()
