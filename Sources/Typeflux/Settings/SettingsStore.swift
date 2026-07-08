@@ -297,7 +297,7 @@ final class SettingsStore {
                     in: .whitespacesAndNewlines
                 ) ?? ""
             if stored.isEmpty || stored == "volc.bigasr.sauc.duration" {
-                return "volc.seedasr.sauc.duration"
+                return "volc.bigasr.sauc.duration"
             }
             return stored
         }

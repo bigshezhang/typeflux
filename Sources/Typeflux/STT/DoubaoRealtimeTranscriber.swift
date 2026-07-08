@@ -35,7 +35,7 @@ final class DoubaoRealtimeTranscriber: RecordingPrewarmingTranscriber, RealtimeT
         return try await DoubaoConnectionTester.verify(
             appID: trimmedAppID,
             accessToken: trimmedAccessToken,
-            resourceID: trimmedResourceID.isEmpty ? "volc.seedasr.sauc.duration" : trimmedResourceID
+            resourceID: trimmedResourceID.isEmpty ? "volc.bigasr.sauc.duration" : trimmedResourceID
         )
     }
 
@@ -119,7 +119,7 @@ final class DoubaoRealtimeTranscriber: RecordingPrewarmingTranscriber, RealtimeT
         return DoubaoConnectionConfiguration(
             appID: appID,
             accessToken: accessToken,
-            resourceID: resourceID.isEmpty ? "volc.seedasr.sauc.duration" : resourceID
+            resourceID: resourceID.isEmpty ? "volc.bigasr.sauc.duration" : resourceID
         )
     }
 }
