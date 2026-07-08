@@ -245,6 +245,7 @@
 "provider.stt.doubaoRealtime" = "Doubao Realtime ASR";
 "provider.stt.googleCloud" = "Google Speech-to-Text";
 "provider.stt.groq" = "Groq";
+"provider.stt.soniox" = "Soniox";
 "provider.stt.typefluxOfficial" = "Typeflux Cloud";
 "provider.llm.openAICompatible" = "OpenAI-Compatible";
 "provider.llm.custom" = "カスタム";
@@ -629,6 +630,7 @@
 "settings.models.useAliCloud" = "アリババクラウドを利用する";
 "settings.models.useDoubao" = "豆包を使用する";
 "settings.models.useGroq" = "Groq を使用する";
+"settings.models.useSoniox" = "Use Soniox";
 "settings.models.useTypefluxOfficial" = "Typeflux 公式を使用する";
 "settings.models.useTypefluxCloud" = "Typeflux Cloud を使用する";
 "settings.models.badge.local" = "ローカル";
@@ -645,6 +647,7 @@
 "settings.models.card.doubao.summary" = "ByteDance のネイティブ バイナリ WebSocket プロトコルを使用した Doubao Speech Recognition 2.0 による低遅延ストリーミング認識。";
 "settings.models.card.googleCloud.summary" = "Google Cloud Speech-to-Text によるリアルタイムのストリーミング音声認識。";
 "settings.models.card.groq.summary" = "Groq の推論エンドポイントによる高速な Whisper 文字起こし。既定モデルは whisper-large-v3-turbo。";
+"settings.models.card.soniox.summary" = "Real-time streaming recognition via Soniox V5 with high accuracy across 60+ languages.";
 "settings.models.card.typefluxOfficial.summary" = "Typeflux 内蔵の音声認識サービスです。Typeflux アカウントでサインインするだけで使用できます。追加の API キーは不要です。";
 "settings.models.card.typefluxCloud.summary" = "Typeflux 内蔵の大規模言語モデルサービスです。Typeflux アカウントでサインインするだけで使用できます。追加の API キーは不要です。";
 "settings.models.card.ollama.summary" = "オプションの自動モデル準備を使用して、ローカルで書き換えおよび編集コマンドを実行します。";
@@ -700,6 +703,7 @@
 "settings.models.overview.doubao" = "音声認識は、ByteDance WebSocket 経由で Doubao Speech Recognition 2.0 にリアルタイムでストリーミングされます。";
 "settings.models.overview.googleCloud" = "音声認識は Google Cloud Speech-to-Text に直接リアルタイムでストリーミングされます。";
 "settings.models.overview.groq" = "音声認識は、Groq の高速推論エンドポイントが Whisper モデルを使用して処理します。";
+"settings.models.overview.soniox" = "Speech recognition is streamed in real time to Soniox V5 via WebSocket.";
 "settings.models.overview.typefluxOfficial" = "音声認識は Typeflux の内蔵サービスで処理されます。";
 "settings.models.overview.typefluxCloud" = "テキストの書き直しと編集は Typeflux の内蔵 LLM サービスで処理されます。";
 "settings.models.mode.local" = "ローカル";
@@ -721,6 +725,7 @@
 "settings.models.focused.doubao" = "Doubao Speech Recognition 2.0 を介した遅延の最も低いクラウド ディクテーション パスが必要な場合は、これを使用します。";
 "settings.models.focused.googleCloud" = "Google Cloud Speech-to-Text のリアルタイム ストリーミング認識が必要な場合にこれを使用します。";
 "settings.models.focused.groq" = "Groq の高速推論を使用した迅速なクラウド文字起こしが必要な場合にこれを使用します。";
+"settings.models.focused.soniox" = "Use this for accurate real-time cloud transcription via Soniox V5 across 60+ languages.";
 "settings.models.focused.typefluxOfficial" = "Typeflux 内蔵の音声認識サービスを使用します。サインインするだけで、追加の設定は不要です。";
 "settings.models.focused.typefluxCloud" = "Typeflux 内蔵の LLM サービスを使用してテキストの書き直しと編集を行います。サインインするだけで、追加の設定は不要です。";
 "settings.models.routing" = "ルーティング動作";
@@ -737,6 +742,7 @@
 "settings.models.routing.doubao" = "Doubao Speech Recognition 2.0 は、ByteDance のバイナリ WebSocket プロトコルを介してリアルタイム ストリーミング ASR を処理します。";
 "settings.models.routing.googleCloud" = "Google Cloud Speech-to-Text はこの Mac から直接リアルタイム ストリーミング ASR を処理します。";
 "settings.models.routing.groq" = "Groq は、Whisper 互換の文字起こしエンドポイントを使用した高速推論でディクテーションを処理します。";
+"settings.models.routing.soniox" = "Soniox V5 handles real-time streaming ASR via WebSocket with high accuracy across 60+ languages.";
 "settings.models.googleCloud.streaming" = "StreamingRecognize";
 "settings.models.googleCloud.projectID" = "Project ID";
 "settings.models.googleCloud.oauth.authorize" = "Google を認可";

@@ -245,6 +245,7 @@
 "provider.stt.doubaoRealtime" = "Doubao Realtime ASR";
 "provider.stt.googleCloud" = "Google Speech-to-Text";
 "provider.stt.groq" = "Groq";
+"provider.stt.soniox" = "Soniox";
 "provider.stt.typefluxOfficial" = "Typeflux Cloud";
 "provider.llm.openAICompatible" = "OpenAI-Compatible";
 "provider.llm.custom" = "맞춤";
@@ -629,6 +630,7 @@
 "settings.models.useAliCloud" = "알리바바 클라우드 사용";
 "settings.models.useDoubao" = "두바오 사용";
 "settings.models.useGroq" = "Groq 사용";
+"settings.models.useSoniox" = "Use Soniox";
 "settings.models.useTypefluxOfficial" = "Typeflux 공식 사용";
 "settings.models.useTypefluxCloud" = "Typeflux Cloud 사용";
 "settings.models.badge.local" = "지역";
@@ -645,6 +647,7 @@
 "settings.models.card.doubao.summary" = "ByteDance의 기본 바이너리 WebSocket 프로토콜을 사용하는 Doubao Speech Recognition 2.0을 통한 저지연 스트리밍 인식.";
 "settings.models.card.googleCloud.summary" = "Google Cloud Speech-to-Text를 통한 실시간 스트리밍 음성 인식.";
 "settings.models.card.groq.summary" = "Groq 추론 엔드포인트를 통한 빠른 Whisper 전사. 기본 모델은 whisper-large-v3-turbo입니다.";
+"settings.models.card.soniox.summary" = "Real-time streaming recognition via Soniox V5 with high accuracy across 60+ languages.";
 "settings.models.card.typefluxOfficial.summary" = "Typeflux 내장 음성 인식 서비스입니다. Typeflux 계정으로 로그인하면 바로 사용할 수 있습니다. 추가 API 키가 필요 없습니다.";
 "settings.models.card.typefluxCloud.summary" = "Typeflux 내장 대형 언어 모델 서비스입니다. Typeflux 계정으로 로그인하면 바로 사용할 수 있습니다. 추가 API 키가 필요 없습니다.";
 "settings.models.card.ollama.summary" = "선택적 자동 모델 준비를 통해 재작성 및 편집 명령을 로컬로 실행합니다.";
@@ -700,6 +703,7 @@
 "settings.models.overview.doubao" = "음성 인식은 ByteDance WebSocket을 통해 Doubao Speech Recognition 2.0으로 실시간 스트리밍됩니다.";
 "settings.models.overview.googleCloud" = "음성 인식은 Google Cloud Speech-to-Text로 직접 실시간 스트리밍됩니다.";
 "settings.models.overview.groq" = "음성 인식은 Groq의 고속 추론 엔드포인트가 Whisper 모델을 사용하여 처리합니다.";
+"settings.models.overview.soniox" = "Speech recognition is streamed in real time to Soniox V5 via WebSocket.";
 "settings.models.overview.typefluxOfficial" = "음성 인식은 Typeflux 내장 서비스로 처리됩니다.";
 "settings.models.overview.typefluxCloud" = "텍스트 재작성과 편집은 Typeflux 내장 LLM 서비스로 처리됩니다.";
 "settings.models.mode.local" = "지역";
@@ -721,6 +725,7 @@
 "settings.models.focused.doubao" = "Doubao Speech Recognition 2.0을 통해 대기 시간이 가장 짧은 클라우드 받아쓰기 경로를 원하는 경우 이 기능을 사용하세요.";
 "settings.models.focused.googleCloud" = "Google Cloud Speech-to-Text의 실시간 스트리밍 인식을 원할 때 사용하세요.";
 "settings.models.focused.groq" = "Groq의 고속 추론을 사용한 빠른 클라우드 전사를 원할 때 이 기능을 사용하세요.";
+"settings.models.focused.soniox" = "Use this for accurate real-time cloud transcription via Soniox V5 across 60+ languages.";
 "settings.models.focused.typefluxOfficial" = "Typeflux 내장 음성 인식 서비스를 사용합니다. 로그인만 하면 추가 설정 없이 사용 가능합니다.";
 "settings.models.focused.typefluxCloud" = "Typeflux 내장 LLM 서비스로 텍스트 재작성과 편집을 사용합니다. 로그인만 하면 추가 설정 없이 사용 가능합니다.";
 "settings.models.routing" = "라우팅 동작";
@@ -737,6 +742,7 @@
 "settings.models.routing.doubao" = "Doubao Speech Recognition 2.0은 ByteDance의 바이너리 WebSocket 프로토콜을 통해 실시간 스트리밍 ASR을 처리합니다.";
 "settings.models.routing.googleCloud" = "Google Cloud Speech-to-Text는 이 Mac에서 직접 실시간 스트리밍 ASR을 처리합니다.";
 "settings.models.routing.groq" = "Groq는 Whisper 호환 전사 엔드포인트를 통한 고속 추론으로 받아쓰기를 처리합니다.";
+"settings.models.routing.soniox" = "Soniox V5 handles real-time streaming ASR via WebSocket with high accuracy across 60+ languages.";
 "settings.models.googleCloud.streaming" = "StreamingRecognize";
 "settings.models.googleCloud.projectID" = "Project ID";
 "settings.models.googleCloud.oauth.authorize" = "Google 인증";

@@ -78,6 +78,8 @@ final class OnboardingViewModel: ObservableObject {
     @Published var googleCloudModel: String
     @Published var groqSTTAPIKey: String
     @Published var groqSTTModel: String
+    @Published var sonioxAPIKey: String
+    @Published var sonioxModel: String
 
     // LLM Config
     @Published var llmProvider: LLMProvider
@@ -162,6 +164,8 @@ final class OnboardingViewModel: ObservableObject {
         googleCloudModel = settingsStore.googleCloudModel
         groqSTTAPIKey = settingsStore.groqSTTAPIKey
         groqSTTModel = settingsStore.groqSTTModel
+        sonioxAPIKey = settingsStore.sonioxAPIKey
+        sonioxModel = settingsStore.sonioxModel
 
         let initialLLMProvider = settingsStore.llmProvider
         let storedRemoteProvider = settingsStore.llmRemoteProvider
@@ -253,6 +257,8 @@ final class OnboardingViewModel: ObservableObject {
             hasText(googleCloudProjectID) && hasText(googleCloudModel)
         case .groq:
             hasText(groqSTTAPIKey) && hasText(groqSTTModel)
+        case .soniox:
+            hasText(sonioxAPIKey)
         }
     }
 
@@ -402,6 +408,8 @@ final class OnboardingViewModel: ObservableObject {
         let language = appLanguage
         let groqKey = groqSTTAPIKey
         let groqModel = groqSTTModel
+        let sonioxKey = sonioxAPIKey
+        let sonioxModelValue = sonioxModel
         let freeModel = freeSTTModel
 
         sttTestTask = Task {
@@ -444,6 +452,11 @@ final class OnboardingViewModel: ObservableObject {
                             baseURL: "https://api.groq.com/openai/v1",
                             model: effectiveModel,
                             apiKey: groqKey
+                        )
+                    case .soniox:
+                        preview = try await SonioxTranscriber.testConnection(
+                            apiKey: sonioxKey,
+                            model: sonioxModelValue
                         )
                     case .freeModel:
                         preview = try await FreeSTTTranscriber.testConnection(modelName: freeModel)
@@ -638,6 +651,9 @@ final class OnboardingViewModel: ObservableObject {
             case .groq:
                 settingsStore.groqSTTAPIKey = groqSTTAPIKey
                 settingsStore.groqSTTModel = groqSTTModel
+            case .soniox:
+                settingsStore.sonioxAPIKey = sonioxAPIKey
+                settingsStore.sonioxModel = sonioxModel
             case .appleSpeech, .typefluxOfficial:
                 break
             }

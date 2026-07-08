@@ -77,6 +77,7 @@ final class STTRouter {
     let doubaoRealtime: Transcriber
     let googleCloud: Transcriber
     let groq: Transcriber
+    let soniox: Transcriber
     let typefluxOfficial: Transcriber
     let typefluxCloudLoginFallbackLocalModel: Transcriber?
     let autoModelDownloadService: AutoModelDownloadService?
@@ -94,6 +95,7 @@ final class STTRouter {
         doubaoRealtime: Transcriber,
         googleCloud: Transcriber,
         groq: Transcriber,
+        soniox: Transcriber,
         typefluxOfficial: Transcriber,
         typefluxCloudLoginFallbackLocalModel: Transcriber? = nil,
         autoModelDownloadService: AutoModelDownloadService? = nil,
@@ -114,6 +116,7 @@ final class STTRouter {
         self.doubaoRealtime = doubaoRealtime
         self.googleCloud = googleCloud
         self.groq = groq
+        self.soniox = soniox
         self.typefluxOfficial = typefluxOfficial
         self.typefluxCloudLoginFallbackLocalModel = typefluxCloudLoginFallbackLocalModel
         self.autoModelDownloadService = autoModelDownloadService

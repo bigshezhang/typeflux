@@ -519,6 +519,8 @@ private final class SingleAudioProcessor {
             defaults.set(model, forKey: "stt.google.model")
         case .groq:
             defaults.set(model, forKey: "stt.groq.model")
+        case .soniox:
+            defaults.set(model, forKey: "stt.soniox.model")
         case .appleSpeech, .aliCloud, .typefluxOfficial:
             throw BatchCommandError(message: "--stt-model is not supported for provider \(provider.rawValue).")
         }
@@ -542,6 +544,7 @@ private final class SingleAudioProcessor {
                 apiKeyOverride: { [settingsStore] in settingsStore.groqSTTAPIKey },
                 modelOverride: { [settingsStore] in settingsStore.groqSTTModel }
             ),
+            soniox: SonioxTranscriber(settingsStore: settingsStore),
             typefluxOfficial: TypefluxOfficialTranscriber(),
             typefluxCloudLoginFallbackLocalModel: DefaultSenseVoiceFallbackTranscriber(
                 modelManager: localModelManager
@@ -659,6 +662,8 @@ private final class SingleAudioProcessor {
             settingsStore.googleCloudModel
         case .groq:
             settingsStore.groqSTTModel
+        case .soniox:
+            settingsStore.sonioxModel
         case .typefluxOfficial:
             "default"
         }
@@ -853,6 +858,7 @@ private final class WAVPersonaBenchmark {
                 apiKeyOverride: { [settingsStore] in settingsStore.groqSTTAPIKey },
                 modelOverride: { [settingsStore] in settingsStore.groqSTTModel }
             ),
+            soniox: SonioxTranscriber(settingsStore: settingsStore),
             typefluxOfficial: TypefluxOfficialTranscriber(),
             typefluxCloudLoginFallbackLocalModel: DefaultSenseVoiceFallbackTranscriber(
                 modelManager: localModelManager
@@ -1088,6 +1094,8 @@ private final class WAVPersonaBenchmark {
             settingsStore.googleCloudModel
         case .groq:
             settingsStore.groqSTTModel
+        case .soniox:
+            settingsStore.sonioxModel
         case .typefluxOfficial:
             "default"
         }

@@ -445,6 +445,8 @@ struct OnboardingView: View {
             googleCloudConfigFields
         case .groq:
             groqSTTConfigFields
+        case .soniox:
+            sonioxConfigFields
         case .appleSpeech, .typefluxOfficial:
             EmptyView()
         }
@@ -822,6 +824,25 @@ struct OnboardingView: View {
         }
     }
 
+    private var sonioxConfigFields: some View {
+        onboardingConfigCard {
+            VStack(spacing: 12) {
+                StudioTextInputCard(
+                    label: L("common.apiKey"),
+                    placeholder: "sk-...",
+                    text: $viewModel.sonioxAPIKey,
+                    secure: true
+                )
+                StudioSuggestedTextInputCard(
+                    label: L("common.model"),
+                    placeholder: SonioxASRDefaults.model,
+                    text: $viewModel.sonioxModel,
+                    suggestions: SonioxASRDefaults.suggestedModels
+                )
+            }
+        }
+    }
+
     private var llmRemoteConfigFields: some View {
         let provider = viewModel.llmRemoteProvider
         let endpointSuggestions = ([viewModel.llmBaseURL, provider.defaultBaseURL]
@@ -1051,7 +1072,7 @@ struct OnboardingView: View {
 
     private func sttProviderSupportsTest(_ provider: STTProvider) -> Bool {
         switch provider {
-        case .whisperAPI, .multimodalLLM, .aliCloud, .doubaoRealtime, .googleCloud, .groq, .freeModel:
+        case .whisperAPI, .multimodalLLM, .aliCloud, .doubaoRealtime, .googleCloud, .groq, .soniox, .freeModel:
             true
         case .localModel, .appleSpeech, .typefluxOfficial:
             false
@@ -1064,6 +1085,8 @@ struct OnboardingView: View {
             URL(string: "https://platform.openai.com/api-keys")
         case .groq:
             URL(string: "https://console.groq.com/keys")
+        case .soniox:
+            URL(string: "https://console.soniox.com/")
         case .aliCloud:
             URL(string: "https://bailian.console.aliyun.com/")
         case .doubaoRealtime:
@@ -1181,6 +1204,7 @@ struct OnboardingView: View {
         case .doubaoRealtime: .doubaoRealtime
         case .googleCloud: .googleCloud
         case .groq: .groqSTT
+        case .soniox: .soniox
         case .appleSpeech: .appleSpeech
         case .typefluxOfficial: .typefluxOfficial
         }
@@ -1256,6 +1280,7 @@ struct OnboardingView: View {
         case .multimodalLLM: "brain.filled.head.profile"
         case .aliCloud: "antenna.radiowaves.left.and.right"
         case .doubaoRealtime: "bolt.horizontal.circle"
+        case .soniox: "waveform.and.mic"
         case .typefluxOfficial: "infinity"
         case .typefluxCloud: "infinity"
         }
@@ -1279,6 +1304,7 @@ struct OnboardingView: View {
         case .doubaoRealtime: L("settings.models.card.doubao.summary")
         case .googleCloud: L("settings.models.card.googleCloud.summary")
         case .groq: L("settings.models.card.groq.summary")
+        case .soniox: L("settings.models.card.soniox.summary")
         case .appleSpeech: ""
         case .typefluxOfficial: L("settings.models.card.typefluxOfficial.summary")
         }

@@ -4421,6 +4421,8 @@ struct StudioView: View {
                 .googleCloud
             case .groq:
                 .groqSTT
+            case .soniox:
+                .soniox
             case .typefluxOfficial:
                 .typefluxOfficial
             }
@@ -4543,6 +4545,17 @@ struct StudioView: View {
                     isSelected: viewModel.sttProvider == .groq,
                     isMuted: false,
                     actionTitle: L("settings.models.useGroq")
+                ),
+                StudioModelCard(
+                    id: StudioModelProviderID.soniox.rawValue,
+                    name: STTProvider.soniox.displayName,
+                    summary: L("settings.models.card.soniox.summary"),
+                    badge: L("settings.models.badge.api"),
+                    metadata: viewModel.sonioxModel.isEmpty
+                        ? L("settings.models.modelNotConfigured") : viewModel.sonioxModel,
+                    isSelected: viewModel.sttProvider == .soniox,
+                    isMuted: false,
+                    actionTitle: L("settings.models.useSoniox")
                 )
             ]
         )
@@ -4730,7 +4743,7 @@ struct StudioView: View {
 
                 if [
                     StudioModelProviderID.freeSTT, .whisperAPI, .multimodalLLM, .ollama, .aliCloud,
-                    .doubaoRealtime, .googleCloud, .groqSTT, .typefluxOfficial
+                    .doubaoRealtime, .googleCloud, .groqSTT, .soniox, .typefluxOfficial
                 ].contains(viewModel.focusedModelProvider) || focusedLLMRemoteProvider != nil {
                     HStack(spacing: StudioTheme.Spacing.small) {
                         Spacer()
@@ -4749,7 +4762,7 @@ struct StudioView: View {
                             }
                         } else if [
                             StudioModelProviderID.freeSTT, .whisperAPI, .multimodalLLM, .aliCloud,
-                            .doubaoRealtime, .googleCloud, .groqSTT, .typefluxOfficial
+                            .doubaoRealtime, .googleCloud, .groqSTT, .soniox, .typefluxOfficial
                         ].contains(viewModel.focusedModelProvider),
                             !viewModel.focusedModelProvider.requiresLoginForConnectionTest || authState.isLoggedIn {
                             StudioButton(
@@ -4778,7 +4791,7 @@ struct StudioView: View {
                         connectionTestResultView(viewModel.llmConnectionTestState)
                     } else if [
                         StudioModelProviderID.freeSTT, .whisperAPI, .multimodalLLM, .aliCloud,
-                        .doubaoRealtime, .googleCloud, .groqSTT, .typefluxOfficial
+                        .doubaoRealtime, .googleCloud, .groqSTT, .soniox, .typefluxOfficial
                     ].contains(viewModel.focusedModelProvider),
                         !viewModel.focusedModelProvider.requiresLoginForConnectionTest || authState.isLoggedIn {
                         connectionTestResultView(viewModel.sttConnectionTestState)
@@ -5210,6 +5223,25 @@ struct StudioView: View {
                         placeholder: OpenAIAudioModelCatalog.groqWhisperModels[0],
                         text: Binding(get: { viewModel.groqSTTModel }, set: viewModel.setGroqSTTModel),
                         suggestions: OpenAIAudioModelCatalog.groqWhisperModels
+                    )
+                }
+
+            case .soniox:
+                VStack(alignment: .leading, spacing: StudioTheme.Spacing.small) {
+                    StudioTextInputCard(
+                        label: L("common.apiKey"), placeholder: "sk-...",
+                        text: Binding(get: { viewModel.sonioxAPIKey }, set: viewModel.setSonioxAPIKey),
+                        secure: true
+                    ) {
+                        if let url = sttProviderAPIKeyURL(.soniox) {
+                            apiKeyHelpButton(url: url)
+                        }
+                    }
+                    StudioSuggestedTextInputCard(
+                        label: L("common.model"),
+                        placeholder: SonioxASRDefaults.model,
+                        text: Binding(get: { viewModel.sonioxModel }, set: viewModel.setSonioxModel),
+                        suggestions: SonioxASRDefaults.suggestedModels
                     )
                 }
             }
@@ -5746,6 +5778,8 @@ struct StudioView: View {
                 && viewModel.googleCloudOAuthAuthorized
         case .groqSTT:
             !viewModel.groqSTTAPIKey.isEmpty
+        case .soniox:
+            !viewModel.sonioxAPIKey.isEmpty
         case .typefluxOfficial:
             authState.isLoggedIn
         case .typefluxCloud:
@@ -5804,6 +5838,8 @@ struct StudioView: View {
             viewModel.setSTTProvider(.googleCloud)
         case .groqSTT:
             viewModel.setSTTProvider(.groq)
+        case .soniox:
+            viewModel.setSTTProvider(.soniox)
         case .typefluxOfficial:
             viewModel.setSTTProvider(.typefluxOfficial)
         case .typefluxCloud:
@@ -5865,6 +5901,8 @@ struct StudioView: View {
             "bolt.horizontal.circle"
         case .googleCloud:
             "cloud"
+        case .soniox:
+            "waveform.and.mic"
         case .typefluxOfficial:
             "infinity"
         case .typefluxCloud:
@@ -5915,6 +5953,8 @@ struct StudioView: View {
             L("settings.models.overview.googleCloud")
         case .groqSTT:
             L("settings.models.overview.groq")
+        case .soniox:
+            L("settings.models.overview.soniox")
         case .typefluxOfficial:
             L("settings.models.overview.typefluxOfficial")
         }
@@ -5947,6 +5987,8 @@ struct StudioView: View {
             STTProvider.googleCloud.displayName
         case .groqSTT:
             STTProvider.groq.displayName
+        case .soniox:
+            STTProvider.soniox.displayName
         case .typefluxOfficial:
             STTProvider.typefluxOfficial.displayName
         }
@@ -5958,7 +6000,7 @@ struct StudioView: View {
             L("settings.models.mode.local")
         case .freeSTT, .whisperAPI, .freeModel, .customLLM, .openRouter, .openAI, .anthropic,
              .gemini, .deepSeek, .kimi, .qwen, .zhipu, .minimax, .grok, .groq, .xiaomi, .openCodeZen, .openCodeGo,
-             .multimodalLLM, .aliCloud, .doubaoRealtime, .googleCloud, .groqSTT, .typefluxOfficial, .typefluxCloud:
+             .multimodalLLM, .aliCloud, .doubaoRealtime, .googleCloud, .groqSTT, .soniox, .typefluxOfficial, .typefluxCloud:
             L("settings.models.mode.remote")
         }
     }
@@ -5969,7 +6011,7 @@ struct StudioView: View {
             StudioTheme.success
         case .freeSTT, .whisperAPI, .freeModel, .customLLM, .openRouter, .openAI, .anthropic,
              .gemini, .deepSeek, .kimi, .qwen, .zhipu, .minimax, .grok, .groq, .xiaomi, .openCodeZen, .openCodeGo,
-             .multimodalLLM, .aliCloud, .doubaoRealtime, .googleCloud, .groqSTT, .typefluxOfficial, .typefluxCloud:
+             .multimodalLLM, .aliCloud, .doubaoRealtime, .googleCloud, .groqSTT, .soniox, .typefluxOfficial, .typefluxCloud:
             StudioTheme.accent
         }
     }
@@ -5980,7 +6022,7 @@ struct StudioView: View {
             StudioTheme.success.opacity(0.12)
         case .freeSTT, .whisperAPI, .freeModel, .customLLM, .openRouter, .openAI, .anthropic,
              .gemini, .deepSeek, .kimi, .qwen, .zhipu, .minimax, .grok, .groq, .xiaomi, .openCodeZen, .openCodeGo,
-             .multimodalLLM, .aliCloud, .doubaoRealtime, .googleCloud, .groqSTT, .typefluxOfficial, .typefluxCloud:
+             .multimodalLLM, .aliCloud, .doubaoRealtime, .googleCloud, .groqSTT, .soniox, .typefluxOfficial, .typefluxCloud:
             StudioTheme.accentSoft
         }
     }
@@ -6012,6 +6054,8 @@ struct StudioView: View {
             URL(string: "https://bailian.console.aliyun.com?tab=model#/api-key")
         case .multimodalLLM:
             URL(string: "https://platform.openai.com/api-keys")
+        case .soniox:
+            URL(string: "https://console.soniox.com/")
         case .doubaoRealtime, .googleCloud, .freeModel, .localModel, .appleSpeech, .typefluxOfficial:
             nil
         }
@@ -6096,6 +6140,8 @@ struct StudioView: View {
         case .groqSTT:
             viewModel.groqSTTModel.isEmpty
                 ? OpenAIAudioModelCatalog.groqWhisperModels[0] : viewModel.groqSTTModel
+        case .soniox:
+            viewModel.sonioxModel.isEmpty ? SonioxASRDefaults.model : viewModel.sonioxModel
         case .typefluxOfficial:
             STTProvider.typefluxOfficial.displayName
         case .typefluxCloud:
@@ -6133,6 +6179,8 @@ struct StudioView: View {
             STTProvider.googleCloud.displayName
         case .groqSTT:
             STTProvider.groq.displayName
+        case .soniox:
+            STTProvider.soniox.displayName
         case .typefluxOfficial:
             STTProvider.typefluxOfficial.displayName
         case .typefluxCloud:
@@ -6168,6 +6216,8 @@ struct StudioView: View {
             L("settings.models.focused.googleCloud")
         case .groqSTT:
             L("settings.models.focused.groq")
+        case .soniox:
+            L("settings.models.focused.soniox")
         case .typefluxOfficial:
             L("settings.models.focused.typefluxOfficial")
         case .typefluxCloud:
@@ -6206,6 +6256,8 @@ struct StudioView: View {
             L("settings.models.routing.googleCloud")
         case .groqSTT:
             L("settings.models.routing.groq")
+        case .soniox:
+            L("settings.models.routing.soniox")
         case .typefluxOfficial:
             L("settings.models.routing.typefluxOfficial")
         case .typefluxCloud:

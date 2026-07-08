@@ -30,6 +30,7 @@ enum STTProvider: String, CaseIterable, Codable {
     case googleCloud
     case groq
     case typefluxOfficial
+    case soniox
 
     static let defaultProvider: STTProvider = .localModel
 
@@ -37,6 +38,7 @@ enum STTProvider: String, CaseIterable, Codable {
         .typefluxOfficial,
         .freeModel,
         .localModel,
+        .soniox,
         .aliCloud,
         .doubaoRealtime,
         .googleCloud,
@@ -71,6 +73,8 @@ enum STTProvider: String, CaseIterable, Codable {
             L("provider.stt.groq")
         case .typefluxOfficial:
             L("provider.stt.typefluxOfficial")
+        case .soniox:
+            L("provider.stt.soniox")
         }
     }
 

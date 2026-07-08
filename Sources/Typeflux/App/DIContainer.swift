@@ -97,6 +97,7 @@ final class DIContainer {
                 apiKeyOverride: { [settingsStore] in settingsStore.groqSTTAPIKey },
                 modelOverride: { [settingsStore] in settingsStore.groqSTTModel }
             ),
+            soniox: SonioxTranscriber(settingsStore: settingsStore),
             typefluxOfficial: TypefluxOfficialTranscriber(),
             typefluxCloudLoginFallbackLocalModel: DefaultSenseVoiceFallbackTranscriber(
                 modelManager: localModelManager

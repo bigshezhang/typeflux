@@ -249,6 +249,7 @@
 "provider.stt.doubaoRealtime" = "豆包实时 ASR";
 "provider.stt.googleCloud" = "Google 语音转文字";
 "provider.stt.groq" = "Groq";
+"provider.stt.soniox" = "Soniox";
 "provider.stt.typefluxOfficial" = "Typeflux Cloud";
 "provider.llm.openAICompatible" = "OpenAI 兼容";
 "provider.llm.custom" = "自定义";
@@ -638,6 +639,7 @@
 "settings.models.useAliCloud" = "使用阿里云";
 "settings.models.useDoubao" = "使用豆包";
 "settings.models.useGroq" = "使用 Groq";
+"settings.models.useSoniox" = "使用 Soniox";
 "settings.models.useTypefluxOfficial" = "使用 Typeflux 官方";
 "settings.models.useTypefluxCloud" = "使用 Typeflux Cloud";
 "settings.models.badge.local" = "本地";
@@ -654,6 +656,7 @@
 "settings.models.card.doubao.summary" = "通过豆包语音识别 2.0 和字节原生二进制 WebSocket 协议进行低延迟流式识别。";
 "settings.models.card.googleCloud.summary" = "通过 Google Cloud Speech-to-Text 执行实时流式语音识别。";
 "settings.models.card.groq.summary" = "通过 Groq 推理接口进行高速 Whisper 转写，默认模型为 whisper-large-v3-turbo。";
+"settings.models.card.soniox.summary" = "通过 Soniox V5 进行实时流式语音识别，支持 60+ 种语言，低延迟 WebSocket 连接。";
 "settings.models.card.typefluxOfficial.summary" = "Typeflux 内置语音识别服务。登录 Typeflux 账号即可使用，无需额外的 API 密钥。";
 "settings.models.card.typefluxCloud.summary" = "Typeflux 内置大语言模型服务。登录 Typeflux 账号即可使用，无需额外的 API 密钥。";
 "settings.models.card.ollama.summary" = "本地执行改写和编辑任务，并可选自动准备模型。";
@@ -711,6 +714,7 @@
 "settings.models.overview.doubao" = "语音识别会通过字节 WebSocket 实时流式发送到豆包语音识别 2.0。";
 "settings.models.overview.googleCloud" = "语音识别会直接实时流式发送到 Google Cloud Speech-to-Text。";
 "settings.models.overview.groq" = "语音识别由 Groq 的高速推理接口通过 Whisper 模型处理。";
+"settings.models.overview.soniox" = "语音识别通过 WebSocket 实时流式传输至 Soniox V5，支持 60+ 种语言。";
 "settings.models.overview.typefluxOfficial" = "语音识别由 Typeflux 内置服务处理。";
 "settings.models.overview.typefluxCloud" = "文字改写和编辑由 Typeflux 内置大语言模型服务处理。";
 "settings.models.mode.local" = "本地";
@@ -732,6 +736,7 @@
 "settings.models.focused.doubao" = "适合希望通过豆包语音识别 2.0 获得最低延迟云端听写路径的场景。";
 "settings.models.focused.googleCloud" = "适合希望使用 Google Cloud Speech-to-Text 进行实时流式识别的场景。";
 "settings.models.focused.groq" = "适合希望使用 Groq 加速推理进行快速云端转写的场景。";
+"settings.models.focused.soniox" = "适合需要通过 Soniox V5 进行高精度实时云端语音识别、支持 60+ 种语言的场景。";
 "settings.models.focused.typefluxOfficial" = "使用 Typeflux 内置语音识别服务，只需登录即可，无需额外配置。";
 "settings.models.focused.typefluxCloud" = "使用 Typeflux 内置大语言模型服务进行文字改写和编辑。只需登录即可，无需额外配置。";
 "settings.models.routing" = "路由行为";
@@ -748,6 +753,7 @@
 "settings.models.routing.doubao" = "豆包语音识别 2.0 会通过字节二进制 WebSocket 协议处理实时流式 ASR。";
 "settings.models.routing.googleCloud" = "Google Cloud Speech-to-Text 会直接从此 Mac 处理实时流式 ASR。";
 "settings.models.routing.groq" = "Groq 会通过 Whisper 兼容转写接口以加速推理处理听写。";
+"settings.models.routing.soniox" = "Soniox V5 通过 WebSocket 实时流式处理语音识别，支持 60+ 种语言，准确率高。";
 "settings.models.googleCloud.streaming" = "StreamingRecognize";
 "settings.models.googleCloud.projectID" = "Project ID";
 "settings.models.googleCloud.oauth.authorize" = "授权 Google";
