@@ -367,13 +367,13 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertEqual(store.doubaoAccessToken, "token-abc")
     }
 
-    func testDefaultDoubaoResourceIDMigration() {
-        XCTAssertEqual(store.doubaoResourceID, "volc.seedasr.sauc.duration")
+    func testDefaultDoubaoResourceID() {
+        XCTAssertEqual(store.doubaoResourceID, DoubaoASRDefaults.resourceID)
     }
 
-    func testDoubaoResourceIDMigratesLegacyValue() {
-        defaults.set("volc.bigasr.sauc.duration", forKey: "stt.doubao.resourceID")
-        XCTAssertEqual(store.doubaoResourceID, "volc.seedasr.sauc.duration")
+    func testDoubaoResourceIDUsesDefaultValue() {
+        defaults.set(DoubaoASRDefaults.resourceID, forKey: "stt.doubao.resourceID")
+        XCTAssertEqual(store.doubaoResourceID, DoubaoASRDefaults.resourceID)
     }
 
     func testDoubaoResourceIDPreservesCustomValue() {

@@ -604,6 +604,7 @@
 "settings.models.multimodalLLM.audioHint" = "오디오는 base64로 인코딩되어 구성된 채팅/완료 엔드포인트에 input_audio로 전송됩니다. 페르소나가 활성화되면 단일 호출로 전사 및 재작성이 발생합니다.";
 "settings.models.aliCloud.getAPIKey" = "API Key 받기";
 "settings.models.doubao.appID" = "앱 ID";
+"settings.models.doubao.resourceID" = "리소스 ID";
 "settings.models.doubao.accessToken" = "액세스 토큰";
 "settings.models.doubao.docs" = "통합 문서 보기";
 "settings.models.doubao.productName" = "두바오 음성인식 2.0";

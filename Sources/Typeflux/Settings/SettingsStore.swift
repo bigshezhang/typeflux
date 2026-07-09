@@ -296,8 +296,8 @@ final class SettingsStore {
                 defaults.string(forKey: "stt.doubao.resourceID")?.trimmingCharacters(
                     in: .whitespacesAndNewlines
                 ) ?? ""
-            if stored.isEmpty || stored == "volc.bigasr.sauc.duration" {
-                return "volc.bigasr.sauc.duration"
+            if stored.isEmpty || stored == DoubaoASRDefaults.resourceID {
+                return DoubaoASRDefaults.resourceID
             }
             return stored
         }

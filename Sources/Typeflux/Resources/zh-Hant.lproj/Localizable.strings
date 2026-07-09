@@ -611,6 +611,7 @@
 "settings.models.multimodalLLM.audioHint" = "音訊會以 base64 編碼，透過 input_audio 傳送到配置的 chat/completions 介面。啟用人設時，轉寫與改寫會在一次呼叫中完成。";
 "settings.models.aliCloud.getAPIKey" = "取得 API Key";
 "settings.models.doubao.appID" = "App ID";
+"settings.models.doubao.resourceID" = "Resource ID";
 "settings.models.doubao.accessToken" = "Access Token";
 "settings.models.doubao.docs" = "查看接入文件";
 "settings.models.doubao.productName" = "豆包語音辨識 2.0";

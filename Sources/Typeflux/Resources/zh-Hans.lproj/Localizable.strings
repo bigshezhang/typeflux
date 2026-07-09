@@ -613,6 +613,7 @@
 "settings.models.multimodalLLM.audioHint" = "音频会以 base64 编码，通过 input_audio 发送到配置的 chat/completions 接口。启用人设时，转写与改写会在一次调用中完成。";
 "settings.models.aliCloud.getAPIKey" = "获取 API Key";
 "settings.models.doubao.appID" = "App ID";
+"settings.models.doubao.resourceID" = "Resource ID";
 "settings.models.doubao.accessToken" = "Access Token";
 "settings.models.doubao.docs" = "查看接入文档";
 "settings.models.doubao.productName" = "豆包语音识别 2.0";

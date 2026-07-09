@@ -5142,6 +5142,14 @@ struct StudioView: View {
                         text: Binding(get: { viewModel.doubaoAppID }, set: viewModel.setDoubaoAppID)
                     )
                     StudioTextInputCard(
+                        label: L("settings.models.doubao.resourceID"),
+                        placeholder: DoubaoASRDefaults.resourceID,
+                        text: Binding(
+                            get: { viewModel.doubaoResourceID },
+                            set: viewModel.setDoubaoResourceID
+                        )
+                    )
+                    StudioTextInputCard(
                         label: L("settings.models.doubao.accessToken"), placeholder: "access-token",
                         text: Binding(
                             get: { viewModel.doubaoAccessToken },

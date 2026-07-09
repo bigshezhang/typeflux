@@ -724,6 +724,11 @@ struct OnboardingView: View {
                     text: $viewModel.doubaoAppID
                 )
                 StudioTextInputCard(
+                    label: L("settings.models.doubao.resourceID"),
+                    placeholder: DoubaoASRDefaults.resourceID,
+                    text: $viewModel.doubaoResourceID
+                )
+                StudioTextInputCard(
                     label: L("settings.models.doubao.accessToken"),
                     placeholder: "",
                     text: $viewModel.doubaoAccessToken,

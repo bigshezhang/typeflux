@@ -604,6 +604,7 @@
 "settings.models.multimodalLLM.audioHint" = "音声はbase64でエンコードされ、input_audioとして構成されたチャット/補完エンドポイントに送信されます。ペルソナがアクティブな場合、転写と書き換えは 1 回の呼び出しで行われます。";
 "settings.models.aliCloud.getAPIKey" = "API Key を取得";
 "settings.models.doubao.appID" = "アプリID";
+"settings.models.doubao.resourceID" = "リソースID";
 "settings.models.doubao.accessToken" = "アクセストークン";
 "settings.models.doubao.docs" = "統合ドキュメントを表示する";
 "settings.models.doubao.productName" = "Doubao 音声認識 2.0";

@@ -9,6 +9,10 @@ enum AliCloudASRDefaults {
     ]
 }
 
+enum DoubaoASRDefaults {
+    static let resourceID = "volc.bigasr.sauc.duration"
+}
+
 enum GoogleCloudSpeechDefaults {
     static let model = "chirp_3"
     static let suggestedModels = ["chirp_3", "long", "short", "latest_long", "latest_short"]

@@ -613,6 +613,7 @@
 "settings.models.multimodalLLM.audioHint" = "Audio is base64-encoded and sent as input_audio to the configured chat/completions endpoint. When a persona is active, transcription and rewriting happen in a single call.";
 "settings.models.aliCloud.getAPIKey" = "Get API Key";
 "settings.models.doubao.appID" = "App ID";
+"settings.models.doubao.resourceID" = "Resource ID";
 "settings.models.doubao.accessToken" = "Access Token";
 "settings.models.doubao.docs" = "View Integration Docs";
 "settings.models.doubao.productName" = "Doubao Speech Recognition 2.0";
