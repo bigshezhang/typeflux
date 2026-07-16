@@ -316,7 +316,6 @@ struct DefaultTypefluxOfficialASRTransport: TypefluxOfficialASRTransport {
             onLLMChunk: onLLMChunk
         )
     }
-
 }
 
 // MARK: - Errors

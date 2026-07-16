@@ -27,42 +27,42 @@ extension STTRouter {
     ) async -> (any RealtimeTranscriptionSession)? {
         switch settingsStore.sttProvider {
         case .aliCloud:
-            return await makeRealtimeTranscriptionSession(
+            await makeRealtimeTranscriptionSession(
                 provider: aliCloud,
                 scenario: scenario,
                 onUpdate: onUpdate,
                 failureContext: "Alibaba Cloud realtime session setup failed"
             )
         case .doubaoRealtime:
-            return await makeRealtimeTranscriptionSession(
+            await makeRealtimeTranscriptionSession(
                 provider: doubaoRealtime,
                 scenario: scenario,
                 onUpdate: onUpdate,
                 failureContext: "Doubao realtime session setup failed"
             )
         case .googleCloud:
-            return await makeRealtimeTranscriptionSession(
+            await makeRealtimeTranscriptionSession(
                 provider: googleCloud,
                 scenario: scenario,
                 onUpdate: onUpdate,
                 failureContext: "Google Cloud realtime session setup failed"
             )
         case .soniox:
-            return await makeRealtimeTranscriptionSession(
+            await makeRealtimeTranscriptionSession(
                 provider: soniox,
                 scenario: scenario,
                 onUpdate: onUpdate,
                 failureContext: "Soniox realtime session setup failed"
             )
         case .typefluxOfficial:
-            return await makeRealtimeTranscriptionSession(
+            await makeRealtimeTranscriptionSession(
                 provider: typefluxOfficial,
                 scenario: scenario,
                 onUpdate: onUpdate,
                 failureContext: "Typeflux Cloud realtime session setup failed"
             )
         default:
-            return nil
+            nil
         }
     }
 

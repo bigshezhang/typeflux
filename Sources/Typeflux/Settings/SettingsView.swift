@@ -2217,7 +2217,10 @@ struct StudioView: View {
                         ) {
                             Toggle(
                                 "",
-                                isOn: Binding(get: { viewModel.textTransformationEnabled }, set: { viewModel.setTextTransformationEnabled($0) })
+                                isOn: Binding(
+                                    get: { viewModel.textTransformationEnabled },
+                                    set: { viewModel.setTextTransformationEnabled($0) }
+                                )
                             )
                             .labelsHidden()
                             .toggleStyle(.switch)
@@ -2237,7 +2240,10 @@ struct StudioView: View {
                                         (label: L("settings.output.opencc.config.s2hk"), value: "s2hk"),
                                         (label: L("settings.output.opencc.config.t2s"), value: "t2s")
                                     ],
-                                    selection: Binding(get: { viewModel.textTransformationRule }, set: { viewModel.setTextTransformationRule($0) }),
+                                    selection: Binding(
+                                        get: { viewModel.textTransformationRule },
+                                        set: { viewModel.setTextTransformationRule($0) }
+                                    ),
                                     width: StudioTheme.Layout.appearancePickerWidth
                                 )
                             }
@@ -6026,7 +6032,8 @@ struct StudioView: View {
             L("settings.models.mode.local")
         case .freeSTT, .whisperAPI, .freeModel, .customLLM, .openRouter, .openAI, .anthropic,
              .gemini, .deepSeek, .kimi, .qwen, .zhipu, .minimax, .grok, .groq, .xiaomi, .openCodeZen, .openCodeGo,
-             .multimodalLLM, .aliCloud, .doubaoRealtime, .googleCloud, .groqSTT, .soniox, .typefluxOfficial, .typefluxCloud:
+             .multimodalLLM, .aliCloud, .doubaoRealtime, .googleCloud, .groqSTT, .soniox, .typefluxOfficial,
+             .typefluxCloud:
             L("settings.models.mode.remote")
         }
     }
@@ -6037,7 +6044,8 @@ struct StudioView: View {
             StudioTheme.success
         case .freeSTT, .whisperAPI, .freeModel, .customLLM, .openRouter, .openAI, .anthropic,
              .gemini, .deepSeek, .kimi, .qwen, .zhipu, .minimax, .grok, .groq, .xiaomi, .openCodeZen, .openCodeGo,
-             .multimodalLLM, .aliCloud, .doubaoRealtime, .googleCloud, .groqSTT, .soniox, .typefluxOfficial, .typefluxCloud:
+             .multimodalLLM, .aliCloud, .doubaoRealtime, .googleCloud, .groqSTT, .soniox, .typefluxOfficial,
+             .typefluxCloud:
             StudioTheme.accent
         }
     }
@@ -6048,7 +6056,8 @@ struct StudioView: View {
             StudioTheme.success.opacity(0.12)
         case .freeSTT, .whisperAPI, .freeModel, .customLLM, .openRouter, .openAI, .anthropic,
              .gemini, .deepSeek, .kimi, .qwen, .zhipu, .minimax, .grok, .groq, .xiaomi, .openCodeZen, .openCodeGo,
-             .multimodalLLM, .aliCloud, .doubaoRealtime, .googleCloud, .groqSTT, .soniox, .typefluxOfficial, .typefluxCloud:
+             .multimodalLLM, .aliCloud, .doubaoRealtime, .googleCloud, .groqSTT, .soniox, .typefluxOfficial,
+             .typefluxCloud:
             StudioTheme.accentSoft
         }
     }

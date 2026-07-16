@@ -205,8 +205,8 @@ extension WorkflowController {
             record.pipelineTiming = pipelineTiming
             logPipelineEvent("llm-processing-completed", for: record)
             record.mode = .askAnswer
-            
-            var openCCResult: String? = nil
+
+            var openCCResult: String?
             let finalAnswer: String
             if let config = settingsStore.effectiveOutputOpenCCConfig {
                 let converted = await outputPostProcessor.process(askDecisionResult.decision.trimmedContent)
@@ -218,7 +218,7 @@ extension WorkflowController {
             } else {
                 finalAnswer = askDecisionResult.decision.trimmedContent
             }
-            
+
             record.personaResultText = askDecisionResult.decision.trimmedContent
             record.openCCResultText = openCCResult
             record.postProcessedText = finalAnswer
@@ -346,9 +346,9 @@ extension WorkflowController {
     ) async -> (outcome: ApplyOutcome, openCCResult: String?, finalResult: String) {
         // 1. Final optimization (punctuation, spaces)
         let optimizedText = DictationOutputOptimizer.optimize(text)
-        
+
         // 2. OpenCC
-        var openCCResult: String? = nil
+        var openCCResult: String?
         let afterOpenCC: String
         if let config = settingsStore.effectiveOutputOpenCCConfig {
             afterOpenCC = await outputPostProcessor.process(optimizedText)
@@ -357,7 +357,7 @@ extension WorkflowController {
         } else {
             afterOpenCC = optimizedText
         }
-        
+
         // 3. Apply to target
         let (outcome, finalAppliedText) = await applyText(
             afterOpenCC,
@@ -1341,8 +1341,8 @@ extension WorkflowController {
         switch Self.askWithoutSelectionAgentDisposition(for: execution.result) {
         case let .answer(text):
             record.mode = .askAnswer
-            
-            var openCCResult: String? = nil
+
+            var openCCResult: String?
             let finalAnswer: String
             if let config = settingsStore.effectiveOutputOpenCCConfig {
                 let converted = await outputPostProcessor.process(text)
@@ -1354,7 +1354,7 @@ extension WorkflowController {
             } else {
                 finalAnswer = text
             }
-            
+
             record.personaResultText = text
             record.openCCResultText = openCCResult
             record.postProcessedText = finalAnswer
@@ -1387,7 +1387,10 @@ extension WorkflowController {
 
             pipelineTiming.applyStartedAt = Date()
             record.pipelineTiming = pipelineTiming
-            let (outcome, processedText) = await applyDetachedAgentEditResult(text, selectionSnapshot: selectionSnapshot)
+            let (outcome, processedText) = await applyDetachedAgentEditResult(
+                text,
+                selectionSnapshot: selectionSnapshot
+            )
             record.selectionEditedText = text
             record.postProcessedText = processedText
             pipelineTiming.applyCompletedAt = Date()
@@ -1590,7 +1593,11 @@ extension WorkflowController {
             try ensureProcessingIsActive(sessionID)
             pipelineTiming.applyStartedAt = Date()
             record.pipelineTiming = pipelineTiming
-            let result = await applyTranscribedText(transcribedText, selectionSnapshot: selectionSnapshot, record: &record)
+            let result = await applyTranscribedText(
+                transcribedText,
+                selectionSnapshot: selectionSnapshot,
+                record: &record
+            )
             record.personaResultText = transcribedText
             record.openCCResultText = result.openCCResult
             record.postProcessedText = result.finalResult

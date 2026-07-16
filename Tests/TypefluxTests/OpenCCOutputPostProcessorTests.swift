@@ -95,7 +95,7 @@ final class OpenCCOutputPostProcessorTests: XCTestCase {
         // 涵蓋多種繁體變體
         let input = "處、裏、裡、彙、彙、衛、衛"
         let result = await processor.process(input)
-        
+
         XCTAssertFalse(result.contains("處"), "Should convert '處'")
         XCTAssertFalse(result.contains("裏"), "Should convert '裏'")
         XCTAssertFalse(result.contains("裡"), "Should convert '裡'")
@@ -139,11 +139,11 @@ final class OpenCCOutputPostProcessorTests: XCTestCase {
         // 測試台灣繁體字轉簡體
         let twResult = await processor.process("裡面的記憶體")
         XCTAssertEqual(twResult, "里面的记忆体")
-        
+
         // 測試香港繁體字轉簡體
         let hkResult = await processor.process("裏面的記憶體")
         XCTAssertEqual(hkResult, "里面的记忆体")
-        
+
         // 測試混合繁體字
         let mixedResult = await processor.process("髮型、發言、聯繫、關係")
         XCTAssertEqual(mixedResult, "发型、发言、联系、关系")

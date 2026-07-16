@@ -520,7 +520,9 @@ private actor SonioxSnapshotDispatcher {
                 isDispatching = false
                 let continuations = flushContinuations
                 flushContinuations.removeAll()
-                for continuation in continuations { continuation.resume() }
+                for continuation in continuations {
+                    continuation.resume()
+                }
                 return
             }
             pendingSnapshot = nil

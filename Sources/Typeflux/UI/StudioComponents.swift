@@ -1631,24 +1631,25 @@ struct StudioHistoryRow: View {
                         copyAction: (record.transcriptText?.isEmpty ?? true) ? nil : onCopyTranscript
                     )
                     historyDetailSection(title: L("history.detail.personaResult"), content: record.personaResultText)
-                    
+
                     if let openCCResult = record.openCCResultText {
                         let configName = switch record.openCCConfig {
-                            case "s2twp": L("settings.output.opencc.config.s2twp")
-                            case "s2tw": L("settings.output.opencc.config.s2tw")
-                            case "s2hk": L("settings.output.opencc.config.s2hk")
-                            case "t2s": L("settings.output.opencc.config.t2s")
-                            default: ""
+                        case "s2twp": L("settings.output.opencc.config.s2twp")
+                        case "s2tw": L("settings.output.opencc.config.s2tw")
+                        case "s2hk": L("settings.output.opencc.config.s2hk")
+                        case "t2s": L("settings.output.opencc.config.t2s")
+                        default: ""
                         }
                         let title = configName.isEmpty ? L("history.detail.openCCResult") : "\(L("history.detail.openCCResult")) (\(configName))"
                         historyDetailSection(title: title, content: openCCResult)
                     }
 
-                    let anyProcessingHappened = (record.personaResultText != nil) 
+                    let anyProcessingHappened = (record.personaResultText != nil)
                         || (record.openCCResultText != nil)
                         || (record.selectionEditedText != nil)
 
-                    let sourceForFinalCompare = record.openCCResultText ?? record.personaResultText ?? record.transcriptText
+                    let sourceForFinalCompare = record.openCCResultText ?? record.personaResultText ?? record
+                        .transcriptText
                     if let postProcessedText = record.postProcessedText,
                        anyProcessingHappened || postProcessedText != sourceForFinalCompare {
                         historyDetailSection(title: L("history.detail.postProcessedResult"), content: postProcessedText)

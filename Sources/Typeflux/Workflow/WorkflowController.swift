@@ -1431,7 +1431,7 @@ final class WorkflowController {
 
         if let lastPaidCreditExhaustedPromptPresentedAt,
            now.timeIntervalSince(lastPaidCreditExhaustedPromptPresentedAt)
-            < Self.paidCreditExhaustedPromptSuppressionInterval {
+           < Self.paidCreditExhaustedPromptSuppressionInterval {
             return false
         }
 

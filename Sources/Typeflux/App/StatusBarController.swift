@@ -572,7 +572,7 @@ final class StatusBarController: NSObject {
         rebuildMenu()
     }
 
-    @objc private func toggleTextTransformation(_ sender: NSMenuItem) {
+    @objc private func toggleTextTransformation(_: NSMenuItem) {
         guard settingsStore.isTextTransformationAvailable else { return }
         settingsStore.outputOpenCCEnabled.toggle()
         rebuildMenu()

@@ -66,11 +66,11 @@ final class StudioThemeTests: XCTestCase {
     }
 
     func testOverviewLayoutUsesSideBySideArrangementForWideContent() {
-        let layout = StudioOverviewPanelLayoutCalculator.layout(for: 1_100)
+        let layout = StudioOverviewPanelLayoutCalculator.layout(for: 1100)
 
         XCTAssertEqual(layout.arrangement, .sideBySide)
         XCTAssertEqual(layout.height, StudioTheme.Layout.overviewPrimaryMinHeight)
-        XCTAssertLessThan(layout.metricsWidth, 1_100)
+        XCTAssertLessThan(layout.metricsWidth, 1100)
         XCTAssertGreaterThan(layout.activityWidth, layout.metricsWidth)
     }
 }

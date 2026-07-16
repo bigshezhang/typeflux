@@ -171,7 +171,8 @@ struct HistoryRecord: Codable, Identifiable {
     }
 
     var text: String {
-        postProcessedText ?? openCCResultText ?? selectionEditedText ?? personaResultText ?? transcriptText ?? errorMessage ?? ""
+        postProcessedText ?? openCCResultText ?? selectionEditedText ?? personaResultText ?? transcriptText ??
+            errorMessage ?? ""
     }
 
     var finalText: String? {

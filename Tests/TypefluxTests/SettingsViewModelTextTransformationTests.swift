@@ -3,14 +3,17 @@ import XCTest
 
 @MainActor
 final class SettingsViewModelTextTransformationTests: XCTestCase {
-    func testTextTransformationIsOnlyAvailableForTraditionalChineseInterface() throws {
+    func testTextTransformationIsOnlyAvailableForTraditionalChineseInterface() {
         let viewModel = makeViewModel(appLanguage: .traditionalChinese)
 
         XCTAssertTrue(viewModel.isTextTransformationAvailable)
 
         for language in AppLanguage.allCases where language != .traditionalChinese {
             viewModel.setAppLanguage(language)
-            XCTAssertFalse(viewModel.isTextTransformationAvailable, "\(language.rawValue) should hide text transformation settings")
+            XCTAssertFalse(
+                viewModel.isTextTransformationAvailable,
+                "\(language.rawValue) should hide text transformation settings"
+            )
         }
     }
 

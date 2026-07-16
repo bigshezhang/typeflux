@@ -11,7 +11,8 @@ final class TypefluxOfficialASRRoutingClientTests: XCTestCase {
             XCTAssertEqual(request.value(forHTTPHeaderField: TypefluxCloudRequestHeaders.scenarioField), "voice-input")
             XCTAssertNil(request.httpBody)
             return (
-                Data(#"{"code":"OK","message":"","data":{"token":"asr-temp","token_type":"Bearer","expires_at":1893456000,"expires_in_seconds":300,"server":["https://asr-1.example.com","http://asr-2.example.com"]}}"#.utf8),
+                Data(#"{"code":"OK","message":"","data":{"token":"asr-temp","token_type":"Bearer","expires_at":1893456000,"expires_in_seconds":300,"server":["https://asr-1.example.com","http://asr-2.example.com"]}}"#
+                    .utf8),
                 Self.httpResponse(url: request.url!, status: 200)
             )
         }
@@ -19,14 +20,14 @@ final class TypefluxOfficialASRRoutingClientTests: XCTestCase {
 
         let decision = try await client.fetchRoute(accessToken: "cloud-token", scenario: .voiceInput)
 
-        XCTAssertEqual(decision, .webSocket(
+        XCTAssertEqual(decision, try .webSocket(
             token: "asr-temp",
             tokenType: "Bearer",
             expiresAt: 1_893_456_000,
             expiresInSeconds: 300,
             serverBaseURLs: [
-                URL(string: "https://asr-1.example.com")!,
-                URL(string: "http://asr-2.example.com")!
+                XCTUnwrap(URL(string: "https://asr-1.example.com")),
+                XCTUnwrap(URL(string: "http://asr-2.example.com"))
             ]
         ))
     }
@@ -34,8 +35,9 @@ final class TypefluxOfficialASRRoutingClientTests: XCTestCase {
     func testFetchRouteAllowsEmptyServerListForCachedConfigFallback() async throws {
         let session = RoutingStubSession()
         await session.setHandler { request in
-            return (
-                Data(#"{"code":"OK","message":"","data":{"token":"asr-temp","token_type":"Bearer","expires_in_seconds":300,"server":[]}}"#.utf8),
+            (
+                Data(#"{"code":"OK","message":"","data":{"token":"asr-temp","token_type":"Bearer","expires_in_seconds":300,"server":[]}}"#
+                    .utf8),
                 Self.httpResponse(url: request.url!, status: 200)
             )
         }
@@ -96,12 +98,13 @@ final class TypefluxASRPublicConfigClientTests: XCTestCase {
             XCTAssertEqual(request.url?.path, "/api/v1/info")
             XCTAssertEqual(request.httpMethod, "GET")
             return (
-                Data(#"{"code":"OK","message":"","data":{"realtime_servers":["https://asr-1.example.com/","http://asr-2.example.com","ftp://ignored.example.com"]}}"#.utf8),
+                Data(#"{"code":"OK","message":"","data":{"realtime_servers":["https://asr-1.example.com/","http://asr-2.example.com","ftp://ignored.example.com"]}}"#
+                    .utf8),
                 HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: nil)!
             )
         }
-        let selector = CloudEndpointSelector(
-            baseURLs: [URL(string: "https://api.example")!],
+        let selector = try CloudEndpointSelector(
+            baseURLs: [XCTUnwrap(URL(string: "https://api.example"))],
             prober: RoutingNoOpProber()
         )
         let executor = CloudRequestExecutor(selector: selector, session: session)
@@ -109,18 +112,18 @@ final class TypefluxASRPublicConfigClientTests: XCTestCase {
 
         let config = try await client.fetchPublicConfig()
 
-        XCTAssertEqual(config.realtimeServers, [
-            URL(string: "https://asr-1.example.com")!,
-            URL(string: "http://asr-2.example.com")!
+        XCTAssertEqual(config.realtimeServers, try [
+            XCTUnwrap(URL(string: "https://asr-1.example.com")),
+            XCTUnwrap(URL(string: "http://asr-2.example.com"))
         ])
     }
 }
 
 final class TypefluxOfficialTranscriberRoutingTests: XCTestCase {
     func testWebSocketRouteUsesTemporaryTokenAndReturnedASRServer() async throws {
-        let asrServer = URL(string: "https://asr-1.example.com")!
-        let routing = MockTypefluxRoutingClient(route: .webSocket(
-            token: try makeUnsignedJWT(payload: ["asr_provider": "doubao"]),
+        let asrServer = try XCTUnwrap(URL(string: "https://asr-1.example.com"))
+        let routing = try MockTypefluxRoutingClient(route: .webSocket(
+            token: makeUnsignedJWT(payload: ["asr_provider": "doubao"]),
             tokenType: "Bearer",
             expiresAt: 1_893_456_000,
             expiresInSeconds: 300,
@@ -157,7 +160,7 @@ final class TypefluxOfficialTranscriberRoutingTests: XCTestCase {
     }
 
     func testWebSocketRouteFallsBackToCachedASRServerWhenTokenResponseHasNoServers() async throws {
-        let cachedServer = URL(string: "https://cached-asr.example.com")!
+        let cachedServer = try XCTUnwrap(URL(string: "https://cached-asr.example.com"))
         let routing = MockTypefluxRoutingClient(route: .webSocket(
             token: "asr-temp",
             tokenType: "Bearer",

@@ -48,7 +48,7 @@ final class OpenCCOutputPostProcessor: OutputPostProcessing, @unchecked Sendable
     }
 
     private func containsChinese(_ text: String) -> Bool {
-        return text.range(of: "\\p{Han}", options: .regularExpression) != nil
+        text.range(of: "\\p{Han}", options: .regularExpression) != nil
     }
 
     private func convertWithOpenCC(text: String, config: String) throws -> String {

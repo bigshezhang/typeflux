@@ -1112,7 +1112,7 @@ final class WorkflowControllerProcessingTests: XCTestCase {
         XCTAssertNil(savedRecord?.personaResultText)
     }
 
-    func testQuickInputLockedRecordingStillAppliesPersonaRewrite() async throws {
+    func testQuickInputLockedRecordingStillAppliesPersonaRewrite() async {
         let textInjector = MockProcessingTextInjector()
         let historyStore = MockProcessingHistoryStore()
         let llmService = CountingProcessingLLMService(rewriteText: "persona rewrite")
@@ -1287,7 +1287,7 @@ final class WorkflowControllerProcessingTests: XCTestCase {
     func testPaidCreditExhaustedPromptIsSuppressedForOneHour() {
         let controller = makeWorkflowController()
         let error = TypefluxCloudBillingError(reason: .quotaExceeded, serverMessage: nil)
-        let firstPresentation = Date(timeIntervalSince1970: 1_000)
+        let firstPresentation = Date(timeIntervalSince1970: 1000)
 
         XCTAssertTrue(controller.shouldPresentCloudBillingError(
             error,
@@ -1310,7 +1310,7 @@ final class WorkflowControllerProcessingTests: XCTestCase {
     func testFreeCreditExhaustedPromptIsNotSuppressed() {
         let controller = makeWorkflowController()
         let error = TypefluxCloudBillingError(reason: .quotaExceeded, serverMessage: nil)
-        let firstPresentation = Date(timeIntervalSince1970: 1_000)
+        let firstPresentation = Date(timeIntervalSince1970: 1000)
 
         XCTAssertTrue(controller.shouldPresentCloudBillingError(
             error,
