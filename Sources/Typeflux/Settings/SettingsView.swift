@@ -2171,6 +2171,24 @@ struct StudioView: View {
                     Divider().overlay(StudioTheme.border.opacity(StudioTheme.Opacity.divider))
 
                     StudioSettingRow(
+                        title: L("settings.overlayStyle.title"),
+                        subtitle: L("settings.overlayStyle.subtitle")
+                    ) {
+                        StudioSegmentedPicker(
+                            options: OverlayStyle.allCases.map {
+                                (label: $0.displayName, value: $0)
+                            },
+                            selection: Binding(
+                                get: { viewModel.overlayStyle },
+                                set: viewModel.setOverlayStyle
+                            )
+                        )
+                        .frame(width: StudioTheme.Layout.appearancePickerWidth)
+                    }
+
+                    Divider().overlay(StudioTheme.border.opacity(StudioTheme.Opacity.divider))
+
+                    StudioSettingRow(
                         title: L("settings.language.title"),
                         subtitle: L("settings.language.subtitle")
                     ) {

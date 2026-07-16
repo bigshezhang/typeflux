@@ -94,6 +94,37 @@ final class SettingsStoreTests: XCTestCase {
         NotificationCenter.default.removeObserver(observer)
     }
 
+    // MARK: - Overlay Style
+
+    func testDefaultOverlayStyle() {
+        XCTAssertEqual(store.overlayStyle, .liquidGlass)
+    }
+
+    func testSetOverlayStyle() {
+        store.overlayStyle = .classic
+        XCTAssertEqual(store.overlayStyle, .classic)
+    }
+
+    func testInvalidOverlayStyleFallsBackToLiquidGlass() {
+        defaults.set("nonexistent", forKey: "ui.overlayStyle")
+        XCTAssertEqual(store.overlayStyle, .liquidGlass)
+    }
+
+    func testOverlayStyleChangePostsNotification() {
+        let expectation = XCTestExpectation(description: "Notification posted")
+        let observer = NotificationCenter.default.addObserver(
+            forName: .overlayStyleDidChange,
+            object: nil,
+            queue: nil
+        ) { _ in
+            expectation.fulfill()
+        }
+
+        store.overlayStyle = .classic
+        wait(for: [expectation], timeout: 1.0)
+        NotificationCenter.default.removeObserver(observer)
+    }
+
     // MARK: - Sound Effects
 
     func testDefaultSoundEffectsEnabled() {

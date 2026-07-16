@@ -7,6 +7,7 @@ extension Notification.Name {
     )
     static let hotkeySettingsDidChange = Notification.Name("SettingsStore.hotkeySettingsDidChange")
     static let appearanceModeDidChange = Notification.Name("SettingsStore.appearanceModeDidChange")
+    static let overlayStyleDidChange = Notification.Name("SettingsStore.overlayStyleDidChange")
     static let agentConfigurationDidChange = Notification.Name("SettingsStore.agentConfigurationDidChange")
     static let localOptimizationDidEnable = Notification.Name("SettingsStore.localOptimizationDidEnable")
 }
@@ -136,6 +137,19 @@ final class SettingsStore {
             guard currentValue != newValue else { return }
             defaults.set(newValue.rawValue, forKey: "ui.appearance")
             NotificationCenter.default.post(name: .appearanceModeDidChange, object: self)
+        }
+    }
+
+    var overlayStyle: OverlayStyle {
+        get {
+            let raw = defaults.string(forKey: "ui.overlayStyle") ?? OverlayStyle.liquidGlass.rawValue
+            return OverlayStyle(rawValue: raw) ?? .liquidGlass
+        }
+        set {
+            let currentValue = overlayStyle
+            guard currentValue != newValue else { return }
+            defaults.set(newValue.rawValue, forKey: "ui.overlayStyle")
+            NotificationCenter.default.post(name: .overlayStyleDidChange, object: self)
         }
     }
 

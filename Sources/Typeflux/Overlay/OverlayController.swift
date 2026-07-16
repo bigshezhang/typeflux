@@ -61,7 +61,12 @@ private struct RoundedVisualEffectBlur: NSViewRepresentable {
     }
 }
 
+private extension EnvironmentValues {
+    @Entry var overlayStyle: OverlayStyle = .liquidGlass
+}
+
 private struct LiquidGlassShapeBackground<S: InsettableShape>: View {
+    @Environment(\.overlayStyle) private var overlayStyle
     let shape: S
     let cornerRadius: CGFloat?
     let tintOpacity: Double
@@ -90,28 +95,11 @@ private struct LiquidGlassShapeBackground<S: InsettableShape>: View {
 
     var body: some View {
         Group {
-            #if compiler(>=6.2)
-                if #available(macOS 26.0, *) {
-                    ZStack {
-                        shape
-                            .fill(Color.clear)
-                            .glassEffect(
-                                Glass.clear
-                                    .interactive(interactive)
-                                    .tint(Color.white.opacity(tintOpacity)),
-                                in: shape
-                            )
-
-                        shape
-                            .fill(Color.black.opacity(scrimOpacity))
-                            .allowsHitTesting(false)
-                    }
-                } else {
-                    fallbackBackground
-                }
-            #else
-                fallbackBackground
-            #endif
+            if overlayStyle == .classic {
+                shape.fill(Color.black)
+            } else {
+                liquidGlassBackground
+            }
         }
         .overlay(
             shape
@@ -127,6 +115,7 @@ private struct LiquidGlassShapeBackground<S: InsettableShape>: View {
                     ),
                     lineWidth: lineWidth
                 )
+                .opacity(overlayStyle == .liquidGlass ? 1 : 0)
         )
         .overlay(
             shape
@@ -144,7 +133,34 @@ private struct LiquidGlassShapeBackground<S: InsettableShape>: View {
                     lineWidth: 0.6
                 )
                 .blendMode(.screen)
+                .opacity(overlayStyle == .liquidGlass ? 1 : 0)
         )
+    }
+
+    @ViewBuilder
+    private var liquidGlassBackground: some View {
+        #if compiler(>=6.2)
+            if #available(macOS 26.0, *) {
+                ZStack {
+                    shape
+                        .fill(Color.clear)
+                        .glassEffect(
+                            Glass.clear
+                                .interactive(interactive)
+                                .tint(Color.white.opacity(tintOpacity)),
+                            in: shape
+                        )
+
+                    shape
+                        .fill(Color.black.opacity(scrimOpacity))
+                        .allowsHitTesting(false)
+                }
+            } else {
+                fallbackBackground
+            }
+        #else
+            fallbackBackground
+        #endif
     }
 
     private var fallbackBackground: some View {
@@ -268,7 +284,9 @@ final class OverlayController {
     }
 
     private let appState: AppStateStore
+    private let settingsStore: SettingsStore
     private var window: NSPanel?
+    private var overlayStyleObserver: NSObjectProtocol?
 
     private let model = OverlayViewModel()
     private var dismissWorkItem: DispatchWorkItem?
@@ -282,14 +300,32 @@ final class OverlayController {
     private var pendingPresentationWorkItem: DispatchWorkItem?
     private var recordingHintAutoHideWorkItem: DispatchWorkItem?
 
-    init(appState: AppStateStore) {
+    init(appState: AppStateStore, settingsStore: SettingsStore) {
         self.appState = appState
+        self.settingsStore = settingsStore
+        model.overlayStyle = settingsStore.overlayStyle
         model.onDismissRequested = { [weak self] in
             self?.dismiss(after: 0)
         }
+        overlayStyleObserver = NotificationCenter.default.addObserver(
+            forName: .overlayStyleDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            model.overlayStyle = self.settingsStore.overlayStyle
+            configureWindowAppearance()
+        }
+    }
+
+    convenience init(appState: AppStateStore) {
+        self.init(appState: appState, settingsStore: SettingsStore())
     }
 
     deinit {
+        if let overlayStyleObserver {
+            NotificationCenter.default.removeObserver(overlayStyleObserver)
+        }
         removeKeyMonitoring()
         removePickerSystemKeyCapture()
         if let pickerSystemKeyHandlerRef {
@@ -871,8 +907,10 @@ final class OverlayController {
             contentView.layer?.backgroundColor = chrome.background.cgColor
             contentView.layer?.cornerRadius = chrome.cornerRadius
             contentView.layer?.masksToBounds = true
-            contentView.layer?.borderWidth = 1
-            contentView.layer?.borderColor = NSColor.white.withAlphaComponent(0.12).cgColor
+            contentView.layer?.borderWidth = model.overlayStyle == .classic ? 0 : 1
+            contentView.layer?.borderColor = model.overlayStyle == .classic
+                ? nil
+                : NSColor.white.withAlphaComponent(0.12).cgColor
         } else {
             contentView.layer?.backgroundColor = NSColor.clear.cgColor
             contentView.layer?.cornerRadius = 0
@@ -883,12 +921,9 @@ final class OverlayController {
     }
 
     private func windowChrome(for presentation: OverlayViewModel.Presentation) -> WindowChromeStyle? {
-        let background = NSColor(
-            calibratedRed: 0.13,
-            green: 0.11,
-            blue: 0.11,
-            alpha: 0.96
-        )
+        let background = model.overlayStyle == .classic
+            ? NSColor.black
+            : NSColor(calibratedRed: 0.13, green: 0.11, blue: 0.11, alpha: 0.96)
 
         switch presentation {
         case .transcriptPreview, .notice:
@@ -1360,6 +1395,7 @@ final class OverlayViewModel: ObservableObject {
     @Published var pickerStyle: OverlayController.PickerStyle = .persona
     @Published var failureActions: [OverlayFailureAction] = []
     @Published var failureTone: OverlayFailureTone = .error
+    @Published var overlayStyle: OverlayStyle = .liquidGlass
     var onDismissRequested: (() -> Void)?
     var onCancelRequested: (() -> Void)?
     var onConfirmRequested: (() -> Void)?
@@ -1439,72 +1475,75 @@ private struct OverlayView: View {
     private let recordingMotion = Animation.easeInOut(duration: 0.38)
 
     var body: some View {
-        if usesWindowChrome {
-            Group {
-                switch model.presentation {
-                case .recordingHold:
-                    recordingStack { recordingMorphCapsule(expanded: false, showControls: false) }
-                case .recordingHoldPreview:
-                    recordingStack {
-                        recordingMorphCapsule(expanded: model.recordingPreviewExpanded, showControls: false)
+        Group {
+            if usesWindowChrome {
+                Group {
+                    switch model.presentation {
+                    case .recordingHold:
+                        recordingStack { recordingMorphCapsule(expanded: false, showControls: false) }
+                    case .recordingHoldPreview:
+                        recordingStack {
+                            recordingMorphCapsule(expanded: model.recordingPreviewExpanded, showControls: false)
+                        }
+                    case .recordingLocked:
+                        recordingStack { recordingMorphCapsule(expanded: false, showControls: true) }
+                    case .recordingLockedPreview:
+                        recordingStack {
+                            recordingMorphCapsule(expanded: model.recordingPreviewExpanded, showControls: true)
+                        }
+                    case .processing:
+                        processingCapsule
+                    case .processingPreview:
+                        processingTranscriptCapsule
+                    case .transcriptPreview:
+                        previewCard
+                    case .notice:
+                        noticeToast
+                    case .failure:
+                        failureCard
+                    case .personaPicker:
+                        personaPickerCard
+                    case .resultDialog:
+                        resultDialogCard
                     }
-                case .recordingLocked:
-                    recordingStack { recordingMorphCapsule(expanded: false, showControls: true) }
-                case .recordingLockedPreview:
-                    recordingStack {
-                        recordingMorphCapsule(expanded: model.recordingPreviewExpanded, showControls: true)
-                    }
-                case .processing:
-                    processingCapsule
-                case .processingPreview:
-                    processingTranscriptCapsule
-                case .transcriptPreview:
-                    previewCard
-                case .notice:
-                    noticeToast
-                case .failure:
-                    failureCard
-                case .personaPicker:
-                    personaPickerCard
-                case .resultDialog:
-                    resultDialogCard
                 }
-            }
-        } else {
-            Group {
-                switch model.presentation {
-                case .recordingHold:
-                    recordingStack { recordingMorphCapsule(expanded: false, showControls: false) }
-                case .recordingHoldPreview:
-                    recordingStack {
-                        recordingMorphCapsule(expanded: model.recordingPreviewExpanded, showControls: false)
+            } else {
+                Group {
+                    switch model.presentation {
+                    case .recordingHold:
+                        recordingStack { recordingMorphCapsule(expanded: false, showControls: false) }
+                    case .recordingHoldPreview:
+                        recordingStack {
+                            recordingMorphCapsule(expanded: model.recordingPreviewExpanded, showControls: false)
+                        }
+                    case .recordingLocked:
+                        recordingStack { recordingMorphCapsule(expanded: false, showControls: true) }
+                    case .recordingLockedPreview:
+                        recordingStack {
+                            recordingMorphCapsule(expanded: model.recordingPreviewExpanded, showControls: true)
+                        }
+                    case .processing:
+                        processingCapsule
+                    case .processingPreview:
+                        processingTranscriptCapsule
+                    case .transcriptPreview:
+                        previewCard
+                    case .notice:
+                        noticeToast
+                    case .failure:
+                        failureCard
+                    case .personaPicker:
+                        personaPickerCard
+                    case .resultDialog:
+                        resultDialogCard
                     }
-                case .recordingLocked:
-                    recordingStack { recordingMorphCapsule(expanded: false, showControls: true) }
-                case .recordingLockedPreview:
-                    recordingStack {
-                        recordingMorphCapsule(expanded: model.recordingPreviewExpanded, showControls: true)
-                    }
-                case .processing:
-                    processingCapsule
-                case .processingPreview:
-                    processingTranscriptCapsule
-                case .transcriptPreview:
-                    previewCard
-                case .notice:
-                    noticeToast
-                case .failure:
-                    failureCard
-                case .personaPicker:
-                    personaPickerCard
-                case .resultDialog:
-                    resultDialogCard
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: contentAlignment)
+                .padding(containerPadding)
+                .animation(model.presentation == .notice ? nil : recordingMotion, value: model.presentation)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: contentAlignment)
-            .padding(containerPadding)
-            .animation(model.presentation == .notice ? nil : recordingMotion, value: model.presentation)
         }
+        .environment(\.overlayStyle, model.overlayStyle)
     }
 
     private var usesWindowChrome: Bool {
@@ -1817,69 +1856,74 @@ private struct OverlayView: View {
         .contentShape(shape)
     }
 
+    @ViewBuilder
     private var personaPickerGlassBackground: some View {
         let shape = RoundedRectangle(cornerRadius: 24, style: .continuous)
 
-        return ZStack {
-            shape
-                .fill(Color.black.opacity(0.001))
-                .shadow(color: Color.black.opacity(0.30), radius: 24, x: 0, y: 16)
+        if model.overlayStyle == .classic {
+            shape.fill(Color.black)
+        } else {
+            ZStack {
+                shape
+                    .fill(Color.black.opacity(0.001))
+                    .shadow(color: Color.black.opacity(0.30), radius: 24, x: 0, y: 16)
 
-            shape
-                .fill(.ultraThinMaterial)
-        }
-        .overlay(
-            shape
-                .fill(Color.black.opacity(0.28))
-                .allowsHitTesting(false)
-        )
-        .overlay(
-            shape
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(0.08),
-                            Color.clear,
-                            Color.black.opacity(0.10)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
+                shape
+                    .fill(.ultraThinMaterial)
+            }
+            .overlay(
+                shape
+                    .fill(Color.black.opacity(0.28))
+                    .allowsHitTesting(false)
+            )
+            .overlay(
+                shape
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.08),
+                                Color.clear,
+                                Color.black.opacity(0.10)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                     )
-                )
-                .allowsHitTesting(false)
-        )
-        .overlay(
-            shape
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(0.26),
-                            Color.white.opacity(0.06),
-                            Color.white.opacity(0.18)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1.0
-                )
-        )
-        .overlay(
-            shape
-                .inset(by: 1.6)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(0.20),
-                            Color.clear,
-                            Color.white.opacity(0.07)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    ),
-                    lineWidth: 0.6
-                )
-                .blendMode(.screen)
-        )
+                    .allowsHitTesting(false)
+            )
+            .overlay(
+                shape
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.26),
+                                Color.white.opacity(0.06),
+                                Color.white.opacity(0.18)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.0
+                    )
+            )
+            .overlay(
+                shape
+                    .inset(by: 1.6)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.20),
+                                Color.clear,
+                                Color.white.opacity(0.07)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 0.6
+                    )
+                    .blendMode(.screen)
+            )
+        }
     }
 
     @ViewBuilder

@@ -39,7 +39,7 @@ final class DIContainer {
             settingsStore: settingsStore,
             audioDeviceManager: audioDeviceManager
         )
-        overlayController = OverlayController(appState: appState)
+        overlayController = OverlayController(appState: appState, settingsStore: settingsStore)
         clipboard = SystemClipboardService()
         outputPostProcessor = OpenCCOutputPostProcessor(settingsStore: settingsStore)
         askAnswerWindowController = AskAnswerWindowController(
