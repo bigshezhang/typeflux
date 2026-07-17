@@ -1,6 +1,7 @@
 import Foundation
 
 struct BillingSubscriptionSnapshot: Decodable, Equatable {
+    let billingEnabled: Bool
     let planCode: String?
     let planName: String?
     let status: String?
@@ -15,6 +16,7 @@ struct BillingSubscriptionSnapshot: Decodable, Equatable {
     enum CodingKeys: String, CodingKey {
         case active
         case paid
+        case billingEnabled = "billing_enabled"
         case planCode = "plan_code"
         case planName = "plan_name"
         case status
@@ -41,8 +43,10 @@ struct BillingSubscriptionSnapshot: Decodable, Equatable {
         planName: String? = nil,
         active: Bool? = nil,
         paid: Bool? = nil,
-        periodSource: String? = nil
+        periodSource: String? = nil,
+        billingEnabled: Bool = false
     ) {
+        self.billingEnabled = billingEnabled
         self.planCode = planCode
         self.planName = planName
         self.status = status
@@ -82,7 +86,10 @@ struct BillingSubscriptionSnapshot: Decodable, Equatable {
             planName: source.decodeIfPresent(String.self, forKey: .planName),
             active: active,
             paid: source.decodeIfPresent(Bool.self, forKey: .paid),
-            periodSource: source.decodeIfPresent(String.self, forKey: .periodSource)
+            periodSource: source.decodeIfPresent(String.self, forKey: .periodSource),
+            billingEnabled: root.decodeIfPresent(Bool.self, forKey: .billingEnabled)
+                ?? source.decodeIfPresent(Bool.self, forKey: .billingEnabled)
+                ?? false
         )
     }
 
@@ -91,6 +98,30 @@ struct BillingSubscriptionSnapshot: Decodable, Equatable {
             return false
         }
         return true
+    }
+
+    var shouldShowSubscriptionDetails: Bool {
+        billingEnabled
+    }
+
+    var treatsCreditsAsFreeAllowance: Bool {
+        !billingEnabled
+    }
+
+    func disablingBilling() -> BillingSubscriptionSnapshot {
+        BillingSubscriptionSnapshot(
+            planCode: planCode,
+            status: status,
+            currentPeriodStart: currentPeriodStart,
+            currentPeriodEnd: currentPeriodEnd,
+            cancelAtPeriodEnd: cancelAtPeriodEnd,
+            entitled: entitled,
+            planName: planName,
+            active: active,
+            paid: paid,
+            periodSource: periodSource,
+            billingEnabled: false
+        )
     }
 
     var hasPaidSubscription: Bool {
@@ -113,7 +144,8 @@ struct BillingSubscriptionSnapshot: Decodable, Equatable {
             cancelAtPeriodEnd: false,
             entitled: false,
             active: false,
-            paid: false
+            paid: false,
+            billingEnabled: false
         )
     }
 

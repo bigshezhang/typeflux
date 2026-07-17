@@ -970,7 +970,11 @@ extension WorkflowController {
                 let shouldPresentBilling = await MainActor.run {
                     guard self.processingSessionID == sessionID else { return false }
                     self.lastRetryableFailureRecord = nil
-                    self.appState.setStatus(.failed(message: billingError.title))
+                    let subscription = AuthState.shared.subscription
+                    self.appState.setStatus(.failed(message: billingError.title(
+                        hasPaidSubscription: subscription.hasPaidSubscription,
+                        billingEnabled: subscription.billingEnabled
+                    )))
                     return true
                 }
                 if shouldPresentBilling {

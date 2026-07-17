@@ -279,7 +279,11 @@ extension WorkflowController {
                             self.activeProcessingRecordID = nil
                         }
                         if self.processingSessionID == sessionID {
-                            self.appState.setStatus(.failed(message: billingError.title))
+                            let subscription = AuthState.shared.subscription
+                            self.appState.setStatus(.failed(message: billingError.title(
+                                hasPaidSubscription: subscription.hasPaidSubscription,
+                                billingEnabled: subscription.billingEnabled
+                            )))
                             return true
                         }
                         return false

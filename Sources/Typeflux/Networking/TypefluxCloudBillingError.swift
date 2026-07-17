@@ -27,23 +27,29 @@ struct TypefluxCloudBillingError: LocalizedError, Equatable {
         }
     }
 
-    func title(hasPaidSubscription: Bool) -> String {
+    func title(hasPaidSubscription: Bool, billingEnabled: Bool = true) -> String {
+        if !billingEnabled {
+            return L("cloud.billing.freeQuotaExceeded.title")
+        }
         switch reason {
         case .subscriptionRequired:
-            L("cloud.billing.subscriptionRequired.title")
+            return L("cloud.billing.subscriptionRequired.title")
         case .quotaExceeded:
-            hasPaidSubscription
+            return hasPaidSubscription
                 ? L("cloud.billing.quotaExceeded.title")
                 : L("cloud.billing.subscriptionRequired.title")
         }
     }
 
-    func message(hasPaidSubscription: Bool) -> String {
+    func message(hasPaidSubscription: Bool, billingEnabled: Bool = true) -> String {
+        if !billingEnabled {
+            return L("cloud.billing.freeQuotaExceeded.body")
+        }
         switch reason {
         case .subscriptionRequired:
-            L("cloud.billing.subscriptionRequired.body")
+            return L("cloud.billing.subscriptionRequired.body")
         case .quotaExceeded:
-            hasPaidSubscription
+            return hasPaidSubscription
                 ? L("cloud.billing.quotaExceeded.body")
                 : L("cloud.billing.subscriptionRequired.body")
         }
@@ -53,12 +59,15 @@ struct TypefluxCloudBillingError: LocalizedError, Equatable {
         primaryActionTitle(hasPaidSubscription: false)
     }
 
-    func primaryActionTitle(hasPaidSubscription: Bool) -> String {
+    func primaryActionTitle(hasPaidSubscription: Bool, billingEnabled: Bool = true) -> String {
+        if !billingEnabled {
+            return L("cloud.billing.action.openAccount")
+        }
         switch reason {
         case .subscriptionRequired:
-            L("cloud.billing.action.subscribe")
+            return L("cloud.billing.action.subscribe")
         case .quotaExceeded:
-            hasPaidSubscription
+            return hasPaidSubscription
                 ? L("cloud.billing.action.openAccount")
                 : L("cloud.billing.action.subscribe")
         }

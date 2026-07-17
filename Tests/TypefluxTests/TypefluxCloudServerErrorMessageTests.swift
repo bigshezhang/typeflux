@@ -88,6 +88,26 @@ final class TypefluxCloudServerErrorMessageTests: XCTestCase {
         }
     }
 
+    func testBillingErrorDoesNotSuggestSubscriptionWhenBillingIsDisabled() {
+        withEnglishLocalization {
+            let error = TypefluxCloudBillingError(reason: .quotaExceeded, serverMessage: nil)
+
+            XCTAssertEqual(
+                error.title(hasPaidSubscription: false, billingEnabled: false),
+                "Free Cloud credits used up"
+            )
+            XCTAssertEqual(
+                error.primaryActionTitle(hasPaidSubscription: false, billingEnabled: false),
+                "Open Account"
+            )
+            XCTAssertFalse(
+                error.message(hasPaidSubscription: false, billingEnabled: false).localizedCaseInsensitiveContains(
+                    "subscribe"
+                )
+            )
+        }
+    }
+
     func testBillingErrorParsesCreditBalanceExhaustedMessage() {
         let message = "request failed: credit_balance_exhausted"
 

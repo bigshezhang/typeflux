@@ -1080,6 +1080,8 @@
 "cloud.billing.subscriptionRequired.body" = "This Cloud feature is not included in your current plan. Subscribe to keep using Typeflux Cloud.";
 "cloud.billing.quotaExceeded.title" = "Typeflux Cloud credits used up";
 "cloud.billing.quotaExceeded.body" = "Your Cloud quota or credits are currently unavailable. Open Account to review your subscription or billing.";
+"cloud.billing.freeQuotaExceeded.title" = "Free Cloud credits used up";
+"cloud.billing.freeQuotaExceeded.body" = "Your free Cloud credits have been used up for this period. Open Account to review usage or switch to another model.";
 "cloud.billing.action.openAccount" = "Open Account";
 "cloud.billing.action.subscribe" = "Subscribe";
 "cloud.billing.action.switchModel" = "Switch Model";
@@ -1139,7 +1141,8 @@
 "auth.account.usageTranscripts" = "Transcript Chars";
 "auth.account.usageAnswers" = "Answer Chars";
 "auth.account.refreshUsage" = "Refresh Usage";
-"auth.account.usageQuota" = "Subscription Credits";
+"auth.account.usageQuota" = "Cloud Credits";
+"auth.account.usageFreeQuota" = "Monthly Free Credits";
 "auth.account.usageQuotaRemaining" = "%@ remaining";
 "auth.account.usageQuotaUnlimited" = "Unlimited allowance";
 "auth.account.usageQuotaUsedOfLimit" = "%@ / %@ used (%@)";

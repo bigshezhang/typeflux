@@ -189,6 +189,44 @@ final class AuthStateTests: XCTestCase {
         XCTAssertNotNil(state.subscriptionError)
     }
 
+    func testSubscriptionRefreshFailureFailsBillingVisibilityClosed() async {
+        var storedToken: (token: String, expiresAt: Int)?
+        var shouldFail = false
+        let activeSubscription = BillingSubscriptionSnapshot(
+            planCode: BillingPlan.defaultPlanCode,
+            status: "active",
+            currentPeriodStart: nil,
+            currentPeriodEnd: "2999-06-01T00:00:00Z",
+            cancelAtPeriodEnd: false,
+            entitled: true,
+            active: true,
+            paid: true,
+            billingEnabled: true
+        )
+        let state = AuthState(
+            loadStoredToken: { storedToken },
+            loadStoredUserProfile: { nil },
+            saveStoredToken: { token, expiresAt in storedToken = (token, expiresAt) },
+            saveStoredUserProfile: { _ in },
+            clearStoredSession: { storedToken = nil },
+            fetchProfile: { _ in self.makeProfile(email: "billing-fail-closed@test.com") },
+            fetchSubscription: { _ in
+                if shouldFail { throw AuthError.networkError(URLError(.notConnectedToInternet)) }
+                return activeSubscription
+            }
+        )
+
+        await state.handleLoginSuccess(token: "token-1", expiresAt: Int(Date().timeIntervalSince1970) + 3600)
+        XCTAssertTrue(state.subscription.billingEnabled)
+
+        shouldFail = true
+        await state.refreshSubscription()
+
+        XCTAssertFalse(state.subscription.billingEnabled)
+        XCTAssertEqual(state.subscription.planCode, BillingPlan.defaultPlanCode)
+        XCTAssertNotNil(state.subscriptionError)
+    }
+
     func testLoginSuccessUsesInMemoryTokenWhenPersistenceDoesNotImmediatelyLoad() async {
         var savedProfile: UserProfile?
         var fetchedProfileToken: String?

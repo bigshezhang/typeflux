@@ -1,13 +1,19 @@
 import SwiftUI
 
 struct AccountUsageCreditProgressView: View {
-    let credits: CloudCreditSummary
+    let credits: CloudCreditSummary?
+    let isFreeAllowance: Bool
+
+    init(credits: CloudCreditSummary?, isFreeAllowance: Bool = false) {
+        self.credits = credits
+        self.isFreeAllowance = isFreeAllowance
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: StudioTheme.Spacing.small) {
             HStack(alignment: .firstTextBaseline, spacing: StudioTheme.Spacing.medium) {
                 Label {
-                    Text(L("auth.account.usageQuota"))
+                    Text(L(isFreeAllowance ? "auth.account.usageFreeQuota" : "auth.account.usageQuota"))
                         .font(.studioBody(StudioTheme.Typography.body, weight: .semibold))
                 } icon: {
                     Image(systemName: "gauge")
@@ -19,7 +25,7 @@ struct AccountUsageCreditProgressView: View {
 
                 Text(remainingText)
                     .font(.studioBody(StudioTheme.Typography.bodySmall, weight: .semibold))
-                    .foregroundStyle(credits.unlimited ? StudioTheme.success : StudioTheme.textSecondary)
+                    .foregroundStyle(credits?.unlimited == true ? StudioTheme.success : StudioTheme.textSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
             }
@@ -60,11 +66,12 @@ struct AccountUsageCreditProgressView: View {
     }
 
     private var hasFiniteLimit: Bool {
-        !credits.unlimited && credits.limit > 0
+        guard let credits else { return false }
+        return !credits.unlimited && credits.limit > 0
     }
 
     private var usagePercentage: Double {
-        guard hasFiniteLimit else { return 0 }
+        guard hasFiniteLimit, let credits else { return 0 }
         return Double(credits.used) / Double(credits.limit) * 100
     }
 
@@ -77,6 +84,9 @@ struct AccountUsageCreditProgressView: View {
     }
 
     private var remainingText: String {
+        guard let credits else {
+            return L("auth.account.usageQuotaUnavailable")
+        }
         if credits.unlimited {
             return L("auth.account.usageQuotaUnlimited")
         }
@@ -87,6 +97,9 @@ struct AccountUsageCreditProgressView: View {
     }
 
     private var progressDescription: String {
+        guard let credits else {
+            return L("auth.account.usageQuotaUnavailable")
+        }
         if credits.unlimited {
             return String(
                 format: L("auth.account.usageQuotaUsedUnlimited"),

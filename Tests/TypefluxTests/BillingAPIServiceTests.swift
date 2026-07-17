@@ -14,6 +14,7 @@ final class BillingAPIServiceTests: XCTestCase {
             {
               "code": "OK",
               "data": {
+                "billing_enabled": true,
                 "plan_code": "typeflux_cloud_monthly",
                 "status": "active",
                 "current_period_start": "2026-05-01T00:00:00Z",
@@ -32,6 +33,9 @@ final class BillingAPIServiceTests: XCTestCase {
         XCTAssertEqual(snapshot.planCode, "typeflux_cloud_monthly")
         XCTAssertEqual(snapshot.status, "active")
         XCTAssertEqual(snapshot.currentPeriodStart, "2026-05-01T00:00:00Z")
+        XCTAssertTrue(snapshot.billingEnabled)
+        XCTAssertTrue(snapshot.shouldShowSubscriptionDetails)
+        XCTAssertFalse(snapshot.treatsCreditsAsFreeAllowance)
         XCTAssertTrue(snapshot.entitled)
         XCTAssertTrue(snapshot.hasSubscription)
     }
@@ -62,6 +66,9 @@ final class BillingAPIServiceTests: XCTestCase {
         XCTAssertEqual(snapshot.status, "canceled")
         XCTAssertTrue(snapshot.cancelAtPeriodEnd)
         XCTAssertFalse(snapshot.entitled)
+        XCTAssertFalse(snapshot.billingEnabled)
+        XCTAssertFalse(snapshot.shouldShowSubscriptionDetails)
+        XCTAssertTrue(snapshot.treatsCreditsAsFreeAllowance)
     }
 
     func testSubscriptionDecodingInfersEntitlementFromActiveNonFractionalPeriodEnd() throws {
