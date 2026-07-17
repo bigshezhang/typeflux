@@ -29,6 +29,7 @@ final class AppPreferencesTests: XCTestCase {
                 .typefluxOfficial,
                 .freeModel,
                 .localModel,
+                .soniox,
                 .aliCloud,
                 .doubaoRealtime,
                 .googleCloud,

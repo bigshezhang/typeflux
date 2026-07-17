@@ -1065,6 +1065,8 @@
 "cloud.billing.subscriptionRequired.body" = "このクラウド機能は現在のプランに含まれていません。購読すると Typeflux Cloud を引き続き利用できます。";
 "cloud.billing.quotaExceeded.title" = "Typeflux Cloud の利用枠が不足しています";
 "cloud.billing.quotaExceeded.body" = "クラウドの利用枠またはクレジットが現在利用できません。アカウント画面で購読または請求を確認してください。";
+"cloud.billing.freeQuotaExceeded.title" = "無料のクラウドクレジットを使い切りました";
+"cloud.billing.freeQuotaExceeded.body" = "この期間の無料クラウドクレジットを使い切りました。アカウントで使用量を確認するか、別のモデルに切り替えてください。";
 "cloud.billing.action.openAccount" = "アカウントを開く";
 "cloud.billing.action.subscribe" = "購読する";
 "cloud.billing.action.switchModel" = "別のモデルに切り替え";
@@ -1124,7 +1126,8 @@
 "auth.account.usageTranscripts" = "文字起こし文字数";
 "auth.account.usageAnswers" = "回答文字数";
 "auth.account.refreshUsage" = "使用量を更新";
-"auth.account.usageQuota" = "サブスクリプションクレジット";
+"auth.account.usageQuota" = "クラウドクレジット";
+"auth.account.usageFreeQuota" = "毎月の無料クレジット";
 "auth.account.usageQuotaRemaining" = "残り %@";
 "auth.account.usageQuotaUnlimited" = "無制限";
 "auth.account.usageQuotaUsedOfLimit" = "%@ / %@ 使用済み（%@）";

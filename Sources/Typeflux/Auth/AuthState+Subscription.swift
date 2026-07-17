@@ -33,9 +33,11 @@ extension AuthState {
             }
             return snapshot
         } catch let error as AuthError {
+            subscription = subscription.disablingBilling()
             subscriptionError = error.localizedDescription
             return nil
         } catch {
+            subscription = subscription.disablingBilling()
             subscriptionError = error.localizedDescription
             return nil
         }

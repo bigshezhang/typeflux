@@ -15,7 +15,9 @@ struct AccountView: View {
         VStack(alignment: .leading, spacing: StudioTheme.Spacing.pageGroup) {
             if let profile = authState.userProfile {
                 profileCard(profile: profile)
-                subscriptionCard
+                if authState.subscription.shouldShowSubscriptionDetails {
+                    subscriptionCard
+                }
                 usageCard
             } else if authState.isLoading {
                 loadingCard
@@ -115,10 +117,6 @@ struct AccountView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                if let credits = authState.usageCredits {
-                    AccountUsageCreditProgressView(credits: credits)
-                }
-
                 if let error = billingActionError ?? authState.subscriptionError {
                     Text(error)
                         .font(.studioBody(StudioTheme.Typography.caption))
@@ -161,6 +159,11 @@ struct AccountView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+
+                AccountUsageCreditProgressView(
+                    credits: authState.usageCredits,
+                    isFreeAllowance: authState.subscription.treatsCreditsAsFreeAllowance
+                )
 
                 HStack(alignment: .top, spacing: StudioTheme.Spacing.medium) {
                     accountSummaryItem(

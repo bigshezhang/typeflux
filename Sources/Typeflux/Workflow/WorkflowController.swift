@@ -1371,6 +1371,7 @@ final class WorkflowController {
     func presentCloudBillingError(_ error: TypefluxCloudBillingError) async {
         await MainActor.run {
             let hasPaidSubscription = AuthState.shared.subscription.hasPaidSubscription
+            let billingEnabled = AuthState.shared.subscription.billingEnabled
             guard self.shouldPresentCloudBillingError(
                 error,
                 hasPaidSubscription: hasPaidSubscription
@@ -1383,7 +1384,10 @@ final class WorkflowController {
 
             let actions: [OverlayFailureAction] = [
                 OverlayFailureAction(
-                    title: error.primaryActionTitle(hasPaidSubscription: hasPaidSubscription),
+                    title: error.primaryActionTitle(
+                        hasPaidSubscription: hasPaidSubscription,
+                        billingEnabled: billingEnabled
+                    ),
                     isRetry: false,
                     trailingSystemImage: "arrow.up.right",
                     handler: { [weak self] in
@@ -1411,8 +1415,8 @@ final class WorkflowController {
             ]
 
             self.overlayController.showFailureWithActions(
-                title: error.title(hasPaidSubscription: hasPaidSubscription),
-                message: error.message(hasPaidSubscription: hasPaidSubscription),
+                title: error.title(hasPaidSubscription: hasPaidSubscription, billingEnabled: billingEnabled),
+                message: error.message(hasPaidSubscription: hasPaidSubscription, billingEnabled: billingEnabled),
                 tone: .billing,
                 actions: actions
             )
